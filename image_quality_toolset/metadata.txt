@@ -1,0 +1,16 @@
+[general]
+name=ImageQualityToolset
+description=Provides tools to check on image quality
+about=Provides tools to check on image quality
+version=1.0
+qgisMinimumVersion=3.0
+author=Telespazio TIM
+email=sen2like@telespazio.com
+category=Analysis
+tags=image quality,mtf,sharpness,analysis,raster
+repository=https://github.com/telespazio-tim/qgis-image-quality-toolset
+homepage=
+tracker=
+license=GPL-3
+license_file=LICENSE
+supportsQt6=True
