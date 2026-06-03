@@ -11,6 +11,6 @@ tags=image quality,mtf,sharpness,analysis,raster
 repository=https://github.com/telespazio-tim/qgis-image-quality-toolset
 homepage=
 tracker=
-license=GPL-3
+license=Apache-2.0
 license_file=LICENSE
 supportsQt6=True
