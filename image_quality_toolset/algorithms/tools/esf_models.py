@@ -199,7 +199,7 @@ def esf_tanh(x, R, passpline):
     from scipy.optimize import curve_fit
     import numpy as np
 
-    # ---- Detection point d inflexion (identique a sigmoide)
+    # ---- Inflection point detection (identical to sigmoid)
     g = np.abs(R[1:] - R[:-1])
     idx0 = np.argmax(g)
     x0 = x[idx0]
@@ -215,14 +215,14 @@ def esf_tanh(x, R, passpline):
     x_cut = x[bmin:bmax]
     y_cut = R[bmin:bmax]
 
-    # ---- Modele ESF TZANNES & MOONEY
+    # ---- TZANNES & MOONEY ESF Model
     def esf_model(x, A, B_x, x0_fit, D):
         return A * np.tanh((x - x0_fit) / B_x) + D
 
-    # ---- Separation avant / apres point d inflexion
+    # ---- Separation before / after inflection point
     i = np.argmin(np.abs(x_cut - x0))
 
-    # Detection sens + normalisation (avant le p0)
+    # Direction detection + normalization (before p0)
     n_side = min(20, len(y_cut) // 10)
     left_mean = np.mean(y_cut[:n_side])
     right_mean = np.mean(y_cut[-n_side:])
@@ -234,7 +234,7 @@ def esf_tanh(x, R, passpline):
 
     amplitude = high - low
 
-    # ---- Initialisation parametres
+    # ---- Parameter initialization
     A = amplitude
     B_x = 100
     k = 10
@@ -244,11 +244,11 @@ def esf_tanh(x, R, passpline):
 
     popt, _ = curve_fit(esf_model, x_cut, y_cut, p0=p0, maxfev=10000)
 
-    # ---- Reconstruction ESF reguliere
+    # ---- Regular ESF reconstruction
     x_ech = np.linspace(1, x[-1], int(x[-1]))
     esfP = esf_model(x_ech, *popt)
 
-    # ---- Erreur L2
+    # ---- L2 error
     R_interp = np.interp(x, x_ech, esfP)
     R2 = np.linalg.norm(R_interp - R)
     R2 = float(R2)
@@ -256,7 +256,7 @@ def esf_tanh(x, R, passpline):
     # ---- RMS
     RMS = np.sqrt(np.mean((R_interp - R)**2))
 
-    #   --- Erreur L2 apres normalisation
+    # --- L2 error after normalization
     R_min, R_max = np.min(R), np.max(R)
     R_norm = (R - R_min) / (R_max - R_min)
     esfP_norm = (esfP - R_min) / (R_max - R_min)
@@ -272,7 +272,7 @@ def esf_fermi(x, R, passpline):
     import numpy as np
     from scipy.special import expit
 
-    # ---- Detection du point d'inflexion
+    # ---- Inflection point detection
     g = np.abs(R[1:] - R[:-1])
     idx0 = np.argmax(g)
     x0 = x[idx0]
@@ -285,7 +285,7 @@ def esf_fermi(x, R, passpline):
     x_cut = x[bmin:bmax]
     y_cut = R[bmin:bmax]
 
-    # ---- Modele ESF stable
+    # ---- Stable ESF model
     def esf_model(x, a1, b1, c1, a2, b2, c2, a3, b3, c3, D):
         f1 = a1 / (1 + np.exp(-b1 * (x - c1)))
         f2 = a2 / (1 + np.exp(-b2 * (x - c2)))
@@ -349,18 +349,18 @@ def esf_fermi(x, R, passpline):
 
     popt, _ = curve_fit(esf_model, x_cut, y_cut, p0=p0, maxfev=20000)
 
-    # ---- Reconstruction ESF reguliere
+    # ---- Regular ESF reconstruction
     x_ech = np.linspace(1, x[-1], int(x[-1]))
     esfP = esf_model(x_ech, *popt)
 
-    # ---- Erreur L2
+    # ---- L2 error
     R2 = [np.sqrt(np.sum((np.interp(x, x_ech, esfP) - R)**2))]
     R2 = R2[0]
 
     # ---- RMS
     RMS = np.sqrt(np.mean((np.interp(x, x_ech, esfP) - R)**2))
 
-    #   --- Erreur L2 apres normalisation
+    # --- L2 error after normalization
     R_min, R_max = np.min(R), np.max(R)
     R_norm = (R - R_min) / (R_max - R_min)
     esfP_norm = (esfP - R_min) / (R_max - R_min)
@@ -376,7 +376,7 @@ def esf_gauss_exp_param(x, R, passpline):
     from scipy.optimize import curve_fit
     import numpy as np
 
-    # ---- Detection point d'inflexion (identique a sigmoide)
+    # ---- Inflection point detection (identical to sigmoid)
     g = np.abs(R[1:] - R[:-1])
     idx0 = np.argmax(g)
     x0 = x[idx0]
@@ -390,13 +390,13 @@ def esf_gauss_exp_param(x, R, passpline):
     x_cut = x[bmin:bmax]
     y_cut = R[bmin:bmax]
 
-    # ---- Modele ESF Yin et al.
+    # ---- ESF Model Yin et al.
     def esf_model(x, A, x0, sigma, B, lambd, C):
         gauss = 0.5 * A * (1 + erf((x - x0) / (np.sqrt(2) * sigma)))
         exp = B * np.exp(-np.abs(x - x0) / lambd)
         return gauss + exp + C
 
-    # Detection sens + normalisation (avant le p0)
+    # Direction detection + normalization (before p0)
     n_side = min(20, len(y_cut) // 10)
     left_mean = np.mean(y_cut[:n_side])
     right_mean = np.mean(y_cut[-n_side:])
@@ -419,11 +419,11 @@ def esf_gauss_exp_param(x, R, passpline):
 
     popt, _ = curve_fit(esf_model, x_cut, y_cut, p0=p0, maxfev=10000)
 
-    # ---- Reconstruction ESF reguliere
+    # ---- Regular ESF reconstruction
     x_ech = np.linspace(1, x[-1], int(x[-1]))
     esfP = esf_model(x_ech, *popt)
 
-    # ---- Erreur L2
+    # ---- L2 error
     R2 = [np.sqrt(np.sum((np.interp(x, x_ech, esfP) - R)**2))]
     R2 = R2[0]
 
@@ -431,7 +431,7 @@ def esf_gauss_exp_param(x, R, passpline):
     R_interp = np.interp(x, x_ech, esfP)
     RMS = np.sqrt(np.mean((R_interp - R)**2))
 
-    #   --- Erreur L2 apres normalisation
+    # --- L2 error after normalization
     R_min, R_max = np.min(R), np.max(R)
     R_norm = (R - R_min) / (R_max - R_min)
     esfP_norm = (esfP - R_min) / (R_max - R_min)
@@ -450,14 +450,14 @@ def esf_loess(x, R, degree=2, frac=0.01):
     x_ech = xout
     esfP = y_smooth
 
-    # ---- Erreur L2
+    # ---- L2 error
     R2 = [np.sqrt(np.sum((np.interp(x, x_ech, esfP) - R)**2))]
     R2 = R2[0]
 
     # ---- RMS
     RMS = np.sqrt(np.mean((np.interp(x, x_ech, esfP) - R)**2))
 
-    #   --- Erreur L2 apres normalisation
+    # --- L2 error after normalization
     R_min, R_max = np.min(R), np.max(R)
     R_norm = (R - R_min) / (R_max - R_min)
     esfP_norm = (esfP - R_min) / (R_max - R_min)
@@ -587,14 +587,14 @@ def esf_to_eq_space_polynomial(x1, R):
     x_cut = x1_ech
     y_cut = esfP
 
-    # ---- Erreur L2
+    # ---- L2 error
     R2 = [np.sqrt(np.sum((np.interp(x1, x1_ech, esfP) - R) ** 2))]
     R2 = R2[0]
 
     # ---- RMS
     RMS = np.sqrt(np.mean((np.interp(x1, x1_ech, esfP) - R) ** 2))
 
-    #   --- Erreur L2 apres normalisation
+    # --- L2 error after normalization
     R_min, R_max = np.min(R), np.max(R)
     R_norm = (R - R_min) / (R_max - R_min)
     esfP_norm = (esfP - R_min) / (R_max - R_min)
@@ -610,7 +610,7 @@ def esf_erf(x, R, passpline):
     from scipy.optimize import curve_fit
     import numpy as np
 
-    # ---- Detection point d inflexion (identique a sigmoide)
+    # ---- Inflection point detection (identical to sigmoid)
     g = np.abs(R[1:] - R[:-1])
     idx0 = np.argmax(g)
     x0 = x[idx0]
@@ -626,7 +626,7 @@ def esf_erf(x, R, passpline):
     x_cut = x[bmin:bmax]
     y_cut = R[bmin:bmax]
 
-    # ---- Modele ESF Turkey BILSAT
+    # ---- Turkey BILSAT ESF Model
     def esf_model(x, x0, a, b, c1, c2, c3, s, sigma):
         gauss = erf((x - x0) / (np.sqrt(2) * sigma))
         w = 0.5 * (1 + np.cos((2 * np.pi * (x - x0)) / s))
@@ -647,18 +647,18 @@ def esf_erf(x, R, passpline):
 
     popt, _ = curve_fit(esf_model, x_cut, y_cut, p0=p0, maxfev=10000)
 
-    # ---- Reconstruction ESF reguliere
+    # ---- Regular ESF reconstruction
     x_ech = np.linspace(1, x[-1], int(x[-1]))
     esfP = esf_model(x_ech, *popt)
 
-    # ---- Erreur L2
+    # ---- L2 error
     R2 = [np.sqrt(np.sum((np.interp(x, x_ech, esfP) - R)**2))]
     R2 = R2[0]
 
     # ---- RMS
     RMS = np.sqrt(np.mean((np.interp(x, x_ech, esfP) - R)**2))
 
-    #   --- Erreur L2 apres normalisation
+    # --- L2 error after normalization
     R_min, R_max = np.min(R), np.max(R)
     R_norm = (R - R_min) / (R_max - R_min)
     esfP_norm = (esfP - R_min) / (R_max - R_min)

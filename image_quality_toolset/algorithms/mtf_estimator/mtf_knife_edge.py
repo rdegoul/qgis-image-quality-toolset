@@ -166,7 +166,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         self.results = None
 
         # Metrics:
-        self.inflexion_value = None  # indice du maximum de la lsf
+        self.inflexion_value = None  # index of the LSF maximum
         self.RER = None
         self.fwhm = None
         self.SNR = None  # SNR of filtered interpolated ESF/ LSF.
@@ -318,8 +318,8 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             im_array_rot = np.rot90(self.im_array)
             self.console("Process Cross Track Edge image")
             # Over sample Image - Process Cross Track EDGE Image rotate image :
-            # Inflexion point ses coordonnees dans l image sur
-            # laquelle est appliquee la rotation a 90°
+            # Inflection point coordinates in the image on
+            # which the 90° rotation is applied
             #
 
             CT_EDGE, x, infl_pos, center_pos, im = rotate_mat(
@@ -361,9 +361,9 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
                 rms
             )
         )
-        # Si Across track edge : alors ce sont des coordonnees lignes
+        # If Across track edge: these are row coordinates
         if self.edge_direction == "CT":
-            # Un position du point d inflexion pour chaque colonne
+            # One inflection point position per column
             s = (self.im_array).shape[1]
             x = np.linspace(0, s - 1, s)  # Colonne
             y = (infl_pos[:])[:, 0] - 1
@@ -371,31 +371,31 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             if self.resize_in_column:
                 x = np.linspace(0, s - 2, s - 1)  # Colonne
                 y = (infl_pos[:-1])[:, 0] - 1
-            # regress position fractionnaire (y) a partir de l indice de colonne (x)
+            # regress fractional position (y) from column index (x)
             self.lr = linregress(x, y)
-            self.inflexion_location = y  # Localisation du point d inflexion en px
-            self.record_of_inflexion_location = x  # Indice de colonne
+            self.inflexion_location = y  # Inflection point location in px
+            self.record_of_inflexion_location = x  # Column index
 
             angle = 90.0 - np.mod(np.arctan(self.lr.slope) * 180.0 / np.pi, 90.0)
 
-        # Si Along track edge : alors ce sont des coordonnees colonne
+        # If Along track edge: these are column coordinates
         if edge_direction == "AL":
 
             s = (self.im_array).shape[0]
             x = (infl_pos[:])[:, 0] - 1
 
-            # Colonne (indice de ligne de 0 a s-1)
+            # Column (row index from 0 to s-1)
             y = np.linspace(0, s - 1, s)
 
-            # Si ajout d une ligne pour la rotation alors on doit supprimer
-            # le point aberrant
+            # If a row was added for rotation, we must remove
+            # the outlier point
             if self.resize_in_line:
                 x = (infl_pos[:-1])[:, 0] - 1
                 y = np.linspace(0, s - 2, s - 1)
-            # regress position fractionnaire (x) a partir de l indice de ligne (y)
+            # regress fractional position (x) from row index (y)
             self.lr = linregress(y, x)
-            self.inflexion_location = x  # Localisation du point d inflexion en px
-            self.record_of_inflexion_location = y  # Indice de ligne
+            self.inflexion_location = x  # Inflection point location in px
+            self.record_of_inflexion_location = y  # Row index
 
             angle = 90.0 - np.mod(np.arctan(self.lr.slope) * 180.0 / np.pi, 90.0)
 
@@ -411,7 +411,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             self.console(" Remove outlier for angle estimate")
             self.inflexion_location_filtered = x[masque]
             self.record_of_inflexion_location_filtered = y[masque]
-            # regress position fractionnaire a partir de l indice de ligne/colonne
+            # regress fractional position from row/column index
             self.lr = linregress(y, x)
         else:
             self.inflexion_location_filtered = x
@@ -573,7 +573,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         N = []
 
         # New implementation
-        # TODO: S assurer que ca fonctionne dans le cas CT / AL , profile Gauche / Droite
+        # TODO: Ensure this works for CT / AL case, Left / Right profile
 
         x_row = (np.arange(0, A.shape[0], 1))
         x_grid = np.vstack(A.shape[1] * [x_row]).T
@@ -625,9 +625,9 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         # # TODO: Graphic box plot ? a revoir
         # fig, ax1 = plt.subplots()
-        # ax1.plot(bin_edges[:-1], bin_means, '+', color='g', label='esf_bin_value')  # on y touche pas
+        # ax1.plot(bin_edges[:-1], bin_means, '+', color='g', label='esf_bin_value')  # do not touch
         # ax2 = ax1.twinx()
-        # #ax2.plot(bin_edges[:-1], bin_count, 'c', label='esf_bin_sample')   # on veut un histogramme en arrière plan
+        # #ax2.plot(bin_edges[:-1], bin_count, 'c', label='esf_bin_sample')   # we want a histogram in the background
         # ax2.bar(bin_edges[:-1],
         #         bin_count,
         #         width=np.diff(bin_edges),
@@ -635,7 +635,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         #         color='c',
         #         label='esf_bin_sample',
         #         align='edge')
-        # ax2.plot(bin_edges[:-1], bin_std, 'k+', label='esf_bin_std')   # représente l'écart-type entre les valeurs... une boîte à moustache ?
+        # ax2.plot(bin_edges[:-1], bin_std, 'k+', label='esf_bin_std')   # represents the standard deviation between values... a box plot?
 
         # ax1.set_xlabel('Bin')
         # ax1.set_ylabel('esf value', color='g')
@@ -645,7 +645,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         # plt.show()
 
-        # Nettoyage grossier du nuage de points
+        # Rough cleanup of the point cloud
         th = 50
         self.th = th
         # xclean, Rclean, R_std_clean = clean_nuage(x1, R, R_std, N, th)
@@ -658,7 +658,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
                                                                  bin_std,
                                                                  bin_count,
                                                                  th)
-        # Nouvvelles variables obtenu avec scipy
+        # New variables obtained with scipy
         self.x = bin_edges[:-1]
         self.N = bin_count
         self.nuage = bin_means
@@ -770,7 +770,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         self.x_esf0 = x1_ech
         self.y_esf0 = y1_ech
 
-        # Debuitage de l esf eq space avec fLOEss :
+        # Denoising the equally spaced ESF with fLOESS:
         self.console("[FLOESS]  remove noise")
         noisy = np.vstack(
             (x1_ech.conj().transpose(), y1_ech.conj().transpose())
@@ -968,7 +968,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         self.inflexion_value = m
         a3 = int(self.x_lsf[self.inflexion_value])
-        # Valeur de x_lsf au point d inflextion
+        # x_lsf value at the inflection point
         self.a3 = a3
         # Final FWHM :
         self.FWHM = compute_fwhm(self.y_lsf, self.sampling)
@@ -981,7 +981,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         # Final SNR
         # Use ESF To Compute SNR on not Equaly spaced ESF
         #    self.x (xclean), self.nuage(Rclean)
-        # Selection des plateaux du SNR à 2 px en dehors du point d inflexion
+        # Selection of SNR plateaus at 2 px away from the inflection point
         # defined with start /   with 2 pixels a part from
         #  the inflextion point (a3)
         # step * FWHM on each side
@@ -1049,7 +1049,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         # init Variables :
         passpline = self.sampling
         l = self.y_lsf.shape[0]
-        # on calcule alors la MTF pour un ESF non parametrique :
+        # compute the MTF for a non-parametric ESF:
         self.f, self._mtf, self.MTF_NYQ = knife_edge1(
             self.x_lsf, self.y_lsf, self.sampling
         )
@@ -1057,7 +1057,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         L_w = passpline * (self.y_lsf.shape[0])
         # Sortie Console
         self.console(
-            "Le pas frequentiel (1 / (L_w * sampling): \n 1/{:0.2f}*{:0.2f} = {:2f} ".format(
+            "Frequency step (1 / (L_w * sampling)): \n 1/{:0.2f}*{:0.2f} = {:2f} ".format(
                 L_w, self.sampling, f1
             )
         )
@@ -1101,9 +1101,9 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         fid.write("\t" + str(self.RER))
         fid.write("\nfwhm")
         fid.write("\t" + str(self.FWHM))
-        fid.write("\nPosition du point d`inflexion")
+        fid.write("\nInflection point position")
         fid.write("\t" + str(self.inflexion_xvalue))
-        fid.write("\nPas d`echantillonnage de la cible")
+        fid.write("\nTarget sampling step")
         fid.write("\t" + str(self.sampling))
         fid.write("\nMTF30")
         fid.write("\t" + str(self.MTF30))
@@ -1138,7 +1138,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         yo_n = yo / np.max(yo)
         print('- Compute RER on normalize Edge Spread Function')
 
-        # Prendre 1/2 GSD de part et d autre du point d inflexion :
+        # Take 1/2 GSD on each side of the inflection point:
         h_w = int((1 / self.sampling) / 2)
 
         # X value for seleced area
@@ -1156,14 +1156,14 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         self.RER = np.abs(Yo1[0] - Yo1[-1:])[0]
 
-        # Coordonnées des 2 points utilisés pour le RER
+        # Coordinates of the 2 points used for the RER
         x1 = (xo[i - h_w] - a3) * self.sampling
         x2 = (xo[i + h_w] - a3) * self.sampling
 
         #y1 = yo_n[i - h_w]
         #y2 = yo_n[i + h_w]
 
-        y1 = np.interp(x1 / self.sampling + a3, xo, yo_n)  # reconvertir x1 en coordonnée xo
+        y1 = np.interp(x1 / self.sampling + a3, xo, yo_n)  # convert x1 back to xo coordinate
         y2 = np.interp(x2 / self.sampling + a3, xo, yo_n)
 
         # Stockage
@@ -1200,12 +1200,12 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         yo_n = yo / np.max(yo)
         print('- Compute HEE on normalize Edge Spread Function')
 
-        # --- Déterminer le sens de l'ESF
+        # --- Determine the direction of the ESF
         if yo_n[-1] > yo_n[0]:
-            # ESF croissante : 0 -> 1
+            # Increasing ESF: 0 -> 1
             comparator = lambda arr, val: arr >= val
         else:
-            # ESF décroissante : 1 -> 0
+            # Decreasing ESF: 1 -> 0
             comparator = lambda arr, val: arr <= val
 
         # --- Seuils
@@ -1215,7 +1215,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             mask = comparator(yo_n, t)
             if not np.any(mask):
                 raise ValueError(f"No value reaches threshold {t}")
-            idx = np.argmax(mask)  # premier point qui satisfait la condition
+            idx = np.argmax(mask)  # first point satisfying the condition
             indices.append(idx)
 
         idx05, idx50, idx95 = indices
@@ -1287,7 +1287,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
 
 
-        # construction de la fonction heaviside
+        # build the Heaviside function
 
         '''u = np.zeros([self.x_esf.shape[0], self.x_esf.shape[0]])
         if self.x_esf[0] > a3:
@@ -1300,15 +1300,15 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         u = np.zeros(n)
 
-        # Position de transition (ex: point d'inflexion)
+        # Transition position (e.g., inflection point)
         idx_trans = int(np.take(a3_b, 0))
 
-        # Sens de variation
+        # Direction of variation
         if y[-1] > y[0]:
-            # ESF croissante (B -> W) : 0 -> 1
+            # Increasing ESF (B -> W): 0 -> 1
             u[idx_trans:] = 1
         else:
-            # ESF décroissante (W -> B) : 1 -> 0
+            # Decreasing ESF (W -> B): 1 -> 0
             u[:idx_trans] = 1
 
 
@@ -1356,11 +1356,11 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         plt.legend()
         plt.grid()
 
-        # Données
+        # Data
         ax_text = plt.subplot(2, 3, 2)
         ax_text.axis('off')
 
-        # a gauche et plus petit
+        # on the left and smaller
         if gsd is not None:
             self.GRD = gsd * self.FWHM
 
@@ -1502,7 +1502,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         y = self.inflexion_location
 
         lr = self.lr
-        # incertitude sur l estimation de l angle
+        # uncertainty on the angle estimate
         slope = lr.slope
         slope_err = lr.stderr
 
@@ -1558,7 +1558,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         h, w = img.shape
 
-        zoom = 80  # taille de la zone affichée
+        zoom = 80  # size of the displayed area
 
         cx = w // 2
         cy = h // 2
@@ -1573,7 +1573,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         plt.subplot(2, 3, 3)
 
-        # Ici graphe refine edge
+        # Refine edge graph
 
         plt.plot(x, y, '+', label='inflexion point location')
         plt.plot(x, x * lr.slope + lr.intercept, '-', label='Interpolation')
@@ -1595,7 +1595,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         bin_count = self.N
         bin_std = self.nuage_std
 
-        # --- 1. Enveloppe ±1σ (zone la plus large, transparence forte) ---
+        # --- 1. ±1σ envelope (widest zone, high transparency) ---
         ax1.fill_between(
             bin_edges,
             bin_means - bin_std,
@@ -1609,7 +1609,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         ax1.plot(bin_edges, bin_means, '.', color='g', markersize=2, label='esf_bin_value')
 
         ax2 = ax1.twinx()
-        # ax2.plot(bin_edges[:-1], bin_count, 'c', label='esf_bin_sample')   # on veut un histogramme en arrière plan
+        # ax2.plot(bin_edges[:-1], bin_count, 'c', label='esf_bin_sample')   # we want a histogram in the background
         ax2.bar(bin_edges[:-1],
                 bin_count[:-1],
                 width=np.diff(bin_edges),
@@ -1625,7 +1625,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         ax2.set_ylabel('esf bin sample', color='c')
         ax2.tick_params(axis='y', labelcolor='c')
 
-        # Légende combinée des deux axes
+        # Combined legend for both axes
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=9)
@@ -1636,35 +1636,35 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         # ESF CLEAN
 
-        # Normalisation de self.nuage de 0 à 1
+        # Normalize self.nuage from 0 to 1
         nuage_min = np.min(self.nuage)
         nuage_max = np.max(self.nuage)
         nuage_norm = (self.nuage - nuage_min) / (nuage_max - nuage_min)
 
         plt.subplot(2, 3, 5)
 
-        # Détection du sens de la transition (basé sur les extrémités)
+        # Detect transition direction (based on extremities)
         if nuage_norm[0] > nuage_norm[-1]:
-            # ESF descendante : commence haut → finit bas
+            # Descending ESF: starts high → ends low
             high_level = 1.0
             low_level = 0.0
             transition_up = False
         else:
-            # ESF montante : commence bas → finit haut
+            # Ascending ESF: starts low → ends high
             low_level = 0.0
             high_level = 1.0
             transition_up = True
 
-        # Position de la transition
+        # Transition position
         idx_trans5 = np.argmin(np.abs(self.x - self.a3))
         ox5_esf = self.x[idx_trans5]
 
-        # Heaviside normalisée
+        # Normalized Heaviside
         if transition_up:
-            # Monte : low → high
+            # Rising: low → high
             u5 = np.where(self.x >= ox5_esf, high_level, low_level)
         else:
-            # Descend : high → low
+            # Falling: high → low
             u5 = np.where(self.x >= ox5_esf, low_level, high_level)
 
         plt.scatter( (self.x - ox_esf) , nuage_norm, c='green', s=10, alpha=0.7, label='Cleaned ESF points')
@@ -1689,33 +1689,33 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         y6 = self.y_esf
 
-        # Normalisation sur [0,1]
+        # Normalize to [0,1]
         y6_min = np.min(y6)
         y6_max = np.max(y6)
         y6_norm = (y6 - y6_min) / (y6_max - y6_min)
 
-        # Détection du sens
+        # Detect direction
         if y6_norm[0] > y6_norm[-1]:
-            # Descendante : commence haut → finit bas
+            # Descending: starts high → ends low
             high_level = 1.0
             low_level = 0.0
             transition_up = False
         else:
-            # Montante : commence bas → finit haut
+            # Ascending: starts low → ends high
             low_level = 0.0
             high_level = 1.0
             transition_up = True
 
-        # Position de transition
-        idx_trans6 = int(np.take(a3_b, 0))  # ou self.a3 si c'est équivalent
+        # Transition position
+        idx_trans6 = int(np.take(a3_b, 0))  # or self.a3 if equivalent
 
-        # Heaviside normalisée
+        # Normalized Heaviside
         if transition_up:
             u6 = np.where(np.arange(len(y6_norm)) >= idx_trans6, high_level, low_level)
         else:
             u6 = np.where(np.arange(len(y6_norm)) >= idx_trans6, low_level, high_level)
 
-        # Affichage
+        # Display
         plt.scatter((self.x_esf - self.a3), y6_norm, c='red', s=10, alpha=0.7,
                     label='Normalized Interpolated ESF points')
         plt.plot((self.x_esf - ox_esf), u6, color='orange', label="Heaviside")

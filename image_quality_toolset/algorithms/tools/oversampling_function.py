@@ -63,52 +63,52 @@ def rotate_mat(im, angle,
 
     center_pos = rotation_center_position(im, - angle_rad)
 
-    # Position du point d'inflexion (infl_pos)
+    # Position of the inflection point (infl_pos)
     infl_pos = edge_subpixel_location(im, oversample, margin=margin)
     l = np.shape(im)[0]
     x = np.arange(1, l + 1, 1)
 
-    # Parcourir les lignes de l image d entree :
-    # (Coordonnees image numpy comme a 0)
+    # Iterate over input image rows:
+    # (numpy image coordinates start at 0)
     for i in range(0, im.shape[0], 1) :
         #print('Ligne: Iteration   ===> ' , i + 1 , ' / ', im.shape[0])
-        #li : selection de la ligne :
+        # li: select the row
         li = (im[i])
-        #Definir position du centre, à partir duquel s'applique la rotation
-        #center_pos : Position theorique du contour
+        # Define center position from which rotation is applied
+        # center_pos: theoretical edge position
         j0_scl = center_pos[i][0]
         j_scl = infl_pos[i][0]
 
-        # x_delta: Correction factor (a appliquer ou pas)
-        # difference entre position point d inflexion (spline) et position ideal
-        # x_delta doit etre faible
+        # x_delta: correction factor (apply or not)
+        # difference between inflection point position (spline) and ideal position
+        # x_delta should be small
         x_delta = j0_scl - j_scl
 
-        #Boucle sur le colonne image
+        # Loop over image columns
         for j in range(0, im.shape[1], 1):
             v = float(li[j])
             #print(j, v)
-            #(xo,yo) repere orthonorme sur la ligne centree en j_scl (Lr)
+            # (xo,yo) orthonormal frame on the line centered at j_scl (Lr)
             xo = j_scl
             yo = 0
-            #A1(i,j) exprime dans (Lr) => (x_a1, y_a1)
+            # A1(i,j) expressed in (Lr) => (x_a1, y_a1)
             x_a1 = (j+1) - xo  # j+1 because j start at 0
             y_a1 = 0
-            #A1_p : la projection orthogonal de A1  sur la droite definie
-            # à angle_rad de (Lr) et passant par O (xo,yo)
-            #A1_p est le milieu de la corde [A1 A2]
-            #ou A2 l'image de A1 par la rotation d'angle de 2*angle rad
+            # A1_p: orthogonal projection of A1 onto the line defined
+            # at angle_rad from (Lr) and passing through O (xo,yo)
+            # A1_p is the midpoint of chord [A1 A2]
+            # where A2 is the image of A1 by rotation of 2*angle_rad
 
             x_a2, y_a2 = rotationtheta(-2.0*angle_rad, x_a1, y_a1)
             x_i = (x_a2 + x_a1) / 2.0
             y_i = (y_a2 + y_a1) / 2.0
 
-            #ïtch : Translation pour corriger les variations ligne a ligne du point d'inflexion:
+            # Translation to correct line-by-line variations of the inflection point:
             x_delta2, y_delta2 = rotationtheta(-2.0*angle_rad, x_delta, 0)
             x_delta_i = (x_delta + x_delta2) / 2.0
             y_delta_i = (y_delta2 + 0.0) / 2.0
 
-            #(i_ovf,j_ovf) Coordonnees fractionnaire matrix surechantillonnée :
+            # (i_ovf,j_ovf) fractional coordinates in the oversampled matrix:
             pitch_correction = True
             if pitch_correction:
                 i_ovf = i + 1 - y_i - y_delta_i
@@ -124,7 +124,7 @@ def rotate_mat(im, angle,
             cast_i_ovf = np.round(i_ovf / oversample)*oversample
             cast_j_ovf = np.round(j_ovf / oversample)*oversample
 
-            # Transformation pour indice dans la matrice np, Valeur commence a 0
+            # Index transformation for numpy matrix, values start at 0
             i_f = np.around(cast_i_ovf/oversample - 1.0)
             j_f = np.around(cast_j_ovf/oversample - 1.0)
             if i_f >= 0 and i_f < ANbLig:
@@ -133,8 +133,8 @@ def rotate_mat(im, angle,
     return A, x, infl_pos, center_pos, im
 
 def rotationtheta(theta, i, j):
-    # rotation theta dans le repere centre
-    # theta radians: angle de rotation
+    # rotation theta in the centered reference frame
+    # theta radians: rotation angle
     # i, j position (x, y)
     theta = np.double(theta)
     R = np.array([[np.cos(theta), -np.sin(theta)],
@@ -151,7 +151,7 @@ def rotation_center_position(im_array, angle_rad):
             angle de rotation
     '''
 
-    #sortie out :
+    # output:
     out = np.zeros((im_array.shape[0], 1), np.float64)
     # Center coordinates in original image (h,w) :
     h = (im_array.shape[0] - 1 )/2.0 + 1
@@ -186,7 +186,7 @@ def edge_subpixel_location(im_array,
         Directory to save debug figures
     '''
 
-    #sortie out :
+    # output:
     out = np.zeros((im_array.shape[0], 1), np.float64)
 
     # Store debug data for a few sample rows
@@ -194,9 +194,9 @@ def edge_subpixel_location(im_array,
     sample_rows = [0, im_array.shape[0] // 4, im_array.shape[0] // 2,
                    3 * im_array.shape[0] // 4, im_array.shape[0] - 1]
 
-    # Parcourir les lignes de l image d entree :
+    # Iterate over input image rows:
     for i in range(0, im_array.shape[0], 1):
-        #li : selection de la ligne :
+        # li: select the row
         li_w = (im_array[i])[
                margin:im_array.shape[1]-margin]
         nan_filter = np.isnan(li_w)

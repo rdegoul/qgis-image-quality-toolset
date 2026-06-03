@@ -59,7 +59,7 @@ lmin_lmax_dic = {
             'PAN': {'bandId': 1, 'l_min': 0, 'l_max': 100},
                 }
 
-global roi_definition  # Coordonnees ligne (lx), colonne (ly) and largeur le tout en pixel
+global roi_definition  # Row coordinates (lx), column (ly) and width, all in pixels
 
 def do_snr(product, metadata,
            window_size, sobel_threshold,

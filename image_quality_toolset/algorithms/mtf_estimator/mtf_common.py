@@ -591,26 +591,26 @@ def remove_nan_borders(image):
 
 def knife_edge1(x, lsf1, passpline):
     # S.Saunier 02 Mars 2017
-    # knife_edge1 Applique normalisation de la LSF anf FFT
-    # Le calcul de la MTF à la frequence de nyquist
+    # knife_edge1 applies LSF normalization and FFT
+    # MTF computation at Nyquist frequency
     # I :   x         : Spatial Values
     #       lsf1      : Corresponding LSF Values
-    #       passpline : Facteur echantillonnage LSF
+    #       passpline : LSF sampling factor
     # O :
     #       f      : Frequency Values
-    #       mtf    : Corresponding MTF Values 
+    #       mtf    : Corresponding MTF Values
     #       mtfnyq : MTF Value @ nyquist
 
-    # normalisation de la lsf:
+    # LSF normalization:
     lsf = lsf1 / np.absolute(np.max(lsf1))
 
-    # fft de la lsf normalise  :
+    # FFT of the normalized LSF:
     fft_lsf = np.absolute(np.fft.fft(lsf))
 
-    # normalisation de la fft :
+    # FFT normalization:
     n_fft_lsf = fft_lsf / fft_lsf[0]
 
-    # Frequence de nyquist du signal d entree   # :
+    # Input signal Nyquist frequency:
     L_w = passpline * (lsf.shape[0])
     print('   - Edge width (period)      : {:.2f} pixels'.format(L_w))
     print('   - Nyquist @ L_w/2          : {:.2f} pixels'.format(L_w / 2))
@@ -628,7 +628,7 @@ def knife_edge1(x, lsf1, passpline):
     f = f[0, :int(np.round(nyquist * 2) - 1)]
     mtf = n_fft_lsf[:int(np.round(nyquist * 2) - 1)]
 
-    # Recherche MTF @ frequence nyquist :
+    # Find MTF @ Nyquist frequency:
     s2 = np.where(f > 0.5)
     i_2 = s2[0][0]
     s1 = np.where(f <= 0.5)
@@ -642,12 +642,12 @@ def knife_edge1(x, lsf1, passpline):
     ord_ = mtf2 - pente * f2  # "ord_" is used instead of "ord" because of python index
     mtfnyq = pente * 0.5 + ord_
 
-    # Affichage :
+    # Display:
     for k, rec in enumerate(f):
         print('Frequence / MTF  : {:.4f} / {:.4f}'.format(rec, mtf[k]))
-    # print('Pour les frï¿½quences                          : ', f)
-    # print('MTF a la fn                                    : ', mtf)
-    print('MTF a la frequence de nyquist fn=fe/2 (interpolated) : {:.2f}'.format(mtfnyq))
+    # print('Frequencies                                    : ', f)
+    # print('MTF at fn                                      : ', mtf)
+    print('MTF at Nyquist frequency fn=fe/2 (interpolated) : {:.2f}'.format(mtfnyq))
 
     return f, mtf, mtfnyq
 
