@@ -9,7 +9,7 @@ This module provides utilities to check and install Python dependencies with:
 - Cross-platform support (Windows, Linux, macOS)
 
 Copyright (C) 2026 Telespazio
-License: Apache-2.0
+License: GPL-3.0
 """
 
 import importlib
