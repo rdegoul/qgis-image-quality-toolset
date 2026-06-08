@@ -176,7 +176,6 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         self.gsd = self._extract_gsd()
 
         self.Transects = list()
-        self.__RefineEdgeSubPxStep = 0
 
         self.im_array = np.copy(self.image) * self.scale + self.offset
         self.ligne, self.colonnes = self.image.shape
@@ -216,10 +215,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             return None
         self.input_angle = input_angle
 
-        for i in range(
-            0, 2
-        ):  # First: Remove outliers. Second: Recalculate linear regression.
-            self.refineEdgeSubPx()
+        self.refineEdgeSubPx()
 
         self.get_oversample_image(
         # input_rotation_angle=rotation_angle,
@@ -239,50 +235,34 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         return self.input_angle if self.input_angle is not None else self.estimated_angle
 
     def refineEdgeSubPx(self):
-        x = None
-        y = None
-
-        for t in self.Transects:
-            if x is None:
-                x = np.array([t.Row])
-                y = np.array([t.EdgeSubPx])
-            else:
-                x = np.append(x, t.Row)
-                y = np.append(y, t.EdgeSubPx)
+        # Pass 1: fit and remove outliers
+        x = np.array([t.Row for t in self.Transects])
+        y = np.array([t.EdgeSubPx for t in self.Transects])
 
         b, a, r, p, stderr = stats.linregress(x, y)
+        std = np.std(y - (a + b * x))
 
-        diff = y - (a + b * x)
-        std = np.std(diff)
-
-        if self.__RefineEdgeSubPxStep == 0:  # Remove outliers
-            transects = list()
-            outlier_rows = []
-            outlier_edges = []
-            for t in self.Transects:
-                if np.abs(a + b * t.Row - t.EdgeSubPx) > 1.75 * std:
-                    outlier_rows.append(t.Row)
-                    outlier_edges.append(t.EdgeSubPx)
-                    t.invalidate()
-                else:
-                    transects.append(t)
-            self.__PreRefinementEdgeSubPx = np.array([y, x], dtype=np.float64)
-            self.__RefineEdgeSubPxStep = 1
-            self.Transects = transects
-
-
-        else:  # Set new subpixel edge pos
-            self.__RefineEdgeSubPxStep = 2
-            y_original = y.copy()
-            for t in self.Transects:
-                t.EdgeSubPx = a + b * t.Row
-
+        transects = []
+        for t in self.Transects:
+            if np.abs(a + b * t.Row - t.EdgeSubPx) > 1.75 * std:
+                t.invalidate()
+            else:
+                transects.append(t)
+        self.Transects = transects
 
         if len(self.Transects) < 5:
             raise Exception("Not enough transects")
 
-        if self.__RefineEdgeSubPxStep == 2:
-            self.estimated_angle = np.arctan(b) * 180 / np.pi
+        # Pass 2: refit on cleaned transects and snap edge positions
+        x = np.array([t.Row for t in self.Transects])
+        y = np.array([t.EdgeSubPx for t in self.Transects])
+
+        b, a, r, p, stderr = stats.linregress(x, y)
+
+        for t in self.Transects:
+            t.EdgeSubPx = a + b * t.Row
+
+        self.estimated_angle = np.arctan(b) * 180 / np.pi
 
     def get_oversample_image(
         self,
