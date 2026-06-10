@@ -908,7 +908,7 @@ class MtfBridge(Mtf):
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=9)
         plt.grid(True, alpha=0.15, axis='both')
-        plt.title('Input ESF')
+        plt.title('Input signal')
 
         nuage_min = np.min(self.nuage)
         nuage_max = np.max(self.nuage)
