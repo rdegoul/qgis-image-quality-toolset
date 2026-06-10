@@ -30,7 +30,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
     """SNR Estimator."""
 
     ALGORITHM_NAME = 'SNREstimator'
-    DISPLAY_NAME = 'Jacie/Variogram Method SNR'
+    DISPLAY_NAME = 'Variogram Method SNR'
     GROUP_NAME = 'SNR'
     GROUP_ID = 'snr'
 
@@ -46,7 +46,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
         return MTFEstimatorAlgorithmSNR(self.result_widget)
     
     def shortHelpString(self):
-        return self.tr('The JACIE/Variogram Method is a noise-estimation technique used mainly in remote sensing image quality assessment. It analyzes the spatial autocorrelation of pixel values in homogeneous areas of an image. By computing the variogram—a function describing how pixel value differences increase with distance—the method estimates the noise variance from the variogram’s nugget, which represents the random, uncorrelated component attributed to sensor noise. From this noise estimate, the Signal-to-Noise Ratio (SNR) is derived.')
+        return self.tr('The Variogram Method is a noise-estimation technique used mainly in remote sensing image quality assessment. It analyzes the spatial autocorrelation of pixel values in homogeneous areas of an image. By computing the variogram—a function describing how pixel value differences increase with distance—the method estimates the noise variance from the variogram’s nugget, which represents the random, uncorrelated component attributed to sensor noise. From this noise estimate, the Signal-to-Noise Ratio (SNR) is derived.')
 
     def initAlgorithm(self, config=None):
         self.addParameter(
@@ -189,6 +189,6 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             feedback=feedback
         )
         snr.variogram_snr()
-        snr.compute_jacie_snr()
+        snr.compute_peak_snr()
         snr.second_method()
         return snr

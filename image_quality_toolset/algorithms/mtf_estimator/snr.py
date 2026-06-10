@@ -41,7 +41,7 @@ class SNR :
         SNR estimation using multiple methods:
         - Variogram nugget effect analysis
         - Local statistics (mean/std) in uniform regions
-        - JACIE peak-histogram method
+        - Peak histogram method
 
         Args:
             roi: Region of interest vector layer
@@ -74,12 +74,12 @@ class SNR :
         self.bin_med = None
         self.bin_count = None
 
-        self.jacie_snr_histo_bin_value = None
-        self.jacie_snr_histo_value = None
+        self.peak_snr_histo_bin_value = None
+        self.peak_snr_histo_value = None
 
         # SNR results:
-        self.jacie_snr_value = None
-        self.jacie_ref_radiance = None
+        self.peak_snr_value = None
+        self.peak_ref_radiance = None
         self.snr_formulation_1 = None
         self.snr_formulation_1_reference_radiance = None
         self.snr_formulation_2 = None
@@ -292,8 +292,8 @@ class SNR :
 
     def print_output(self):
         """Print calculated SNR results."""
-        self.console('JACIE SNR Value        : {:.2f} @ {:.2f}'.
-                     format(self.jacie_snr_value, self.jacie_ref_radiance))
+        self.console('Peak SNR Value         : {:.2f} @ {:.2f}'.
+                     format(self.peak_snr_value, self.peak_ref_radiance))
         self.console('Quantitative SNR Value : {:.2f} @ {:.2f}'.
                      format(self.snr_formulation_1 if self.snr_formulation_1 is not None else np.nan,
                             self.snr_formulation_1_reference_radiance if self.snr_formulation_1_reference_radiance is not None else np.nan))
@@ -367,28 +367,28 @@ class SNR :
             ax.set_title('Image Radiance Distribution (N/A)')
 
         # ---------------------------------------------------------------
-        # (4) Bottom-right: SNR JACIE histogram
+        # (4) Bottom-right: SNR peak histogram
         # ---------------------------------------------------------------
         ax = axs[1, 1]
-        if self.jacie_snr_histo_value is not None and self.jacie_snr_histo_bin_value is not None:
-            ax.hlines(self.jacie_snr_histo_value,
-                      self.jacie_snr_histo_bin_value[:-1],
-                      self.jacie_snr_histo_bin_value[1:],
+        if self.peak_snr_histo_value is not None and self.peak_snr_histo_bin_value is not None:
+            ax.hlines(self.peak_snr_histo_value,
+                      self.peak_snr_histo_bin_value[:-1],
+                      self.peak_snr_histo_bin_value[1:],
                       colors='g', lw=2, label='SNR Histogram')
             ax.legend()
             ax.set_xlabel('SNR')
             ax.set_ylabel('Count')
-            ax.set_title('SNR JACIE Method')
+            ax.set_title('Peak SNR Histogram')
             ax.grid(True, alpha=0.3)
             textstr = '\n '.join([
-                'Peak SNR : {:.2f}'.format(self.jacie_snr_value),
-                ' @ {:.2f} W/(m².str.µm)'.format(self.jacie_ref_radiance)])
+                'Peak SNR : {:.2f}'.format(self.peak_snr_value),
+                ' @ {:.2f} W/(m².str.µm)'.format(self.peak_ref_radiance)])
             ax.text(0.5, 0.95, textstr, transform=ax.transAxes,
                     fontsize=10, verticalalignment='top', horizontalalignment='center', bbox=props)
         else:
-            ax.text(0.5, 0.5, 'JACIE SNR data not available',
+            ax.text(0.5, 0.5, 'Peak SNR data not available',
                     transform=ax.transAxes, ha='center', va='center')
-            ax.set_title('SNR JACIE (N/A)')
+            ax.set_title('Peak SNR Histogram (N/A)')
 
         return [fig]
 
@@ -404,9 +404,9 @@ class SNR :
         """Return True if computed SNR/MTF is valid."""
         return self._isValid
     
-    def compute_jacie_snr(self, precision_v=None):
+    def compute_peak_snr(self, precision_v=None):
         """
-        Compute SNR using the JACIE method (histogram peak of local SNR).
+        Compute SNR using the peak-histogram method (histogram peak of local SNR).
 
         Args:
             precision_v: Precision of SNR calculation (bin width). 
@@ -426,8 +426,8 @@ class SNR :
 
         if len(snr_image_m) == 0:
             self.console("Error: No valid SNR values after filtering NaN/inf/zeros")
-            self.jacie_snr_value = np.nan
-            self.jacie_ref_radiance = np.nan
+            self.peak_snr_value = np.nan
+            self.peak_ref_radiance = np.nan
             return
 
         # Filter out very small SNR values (< 1) - typically edges or noise
@@ -438,8 +438,8 @@ class SNR :
 
         if len(snr_image_m) == 0:
             self.console("Error: No valid SNR values above threshold")
-            self.jacie_snr_value = np.nan
-            self.jacie_ref_radiance = np.nan
+            self.peak_snr_value = np.nan
+            self.peak_ref_radiance = np.nan
             return
 
         # Filter outliers: support modern sensors with high SNR
@@ -450,8 +450,8 @@ class SNR :
 
         if len(snr_image_m) == 0:
             self.console("Error: No valid SNR values after outlier filtering")
-            self.jacie_snr_value = np.nan
-            self.jacie_ref_radiance = np.nan
+            self.peak_snr_value = np.nan
+            self.peak_ref_radiance = np.nan
             return
 
         # Compute histogram with fixed bin size
@@ -461,28 +461,28 @@ class SNR :
         bin_number = max(10, int((snr_max - snr_min) / bin_width))
 
         # Perform binned statistics (count SNR occurrences)
-        jacie_snr_histo_value, jacie_snr_histo_bin_value, _4 = \
+        peak_snr_histo_value, peak_snr_histo_bin_value, _4 = \
             binned_statistic(snr_image_m, snr_image_m,
                              statistic='count',
                              bins=bin_number,
                              range=(snr_min, snr_max))
 
-        # Peak of the histogram is the estimated JACIE SNR
-        hist = jacie_snr_histo_value
+        # Peak of the histogram is the estimated SNR
+        hist = peak_snr_histo_value
         maximum_loc = np.where(hist == max(hist))[0]
         self.maximum_loc = maximum_loc[0]
-        c = jacie_snr_histo_bin_value[1] - jacie_snr_histo_bin_value[0]
-        self.jacie_snr_value = jacie_snr_histo_bin_value[maximum_loc][0] + (c / 2.0)
-        self.jacie_snr_histo_value = jacie_snr_histo_value
-        self.jacie_snr_histo_bin_value = jacie_snr_histo_bin_value
+        c = peak_snr_histo_bin_value[1] - peak_snr_histo_bin_value[0]
+        self.peak_snr_value = peak_snr_histo_bin_value[maximum_loc][0] + (c / 2.0)
+        self.peak_snr_histo_value = peak_snr_histo_value
+        self.peak_snr_histo_bin_value = peak_snr_histo_bin_value
 
         # Compute reference radiance from pixels within the peak SNR bin
         # to avoid overestimation bias.
-        bin_lower = jacie_snr_histo_bin_value[self.maximum_loc]
-        bin_upper = jacie_snr_histo_bin_value[self.maximum_loc + 1]
+        bin_lower = peak_snr_histo_bin_value[self.maximum_loc]
+        bin_upper = peak_snr_histo_bin_value[self.maximum_loc + 1]
         peak_bin_mask = (snr_image_m >= bin_lower) & (snr_image_m < bin_upper)
-        
+
         if np.any(peak_bin_mask):
-            self.jacie_ref_radiance = np.mean(im_array_rad_m[peak_bin_mask])
+            self.peak_ref_radiance = np.mean(im_array_rad_m[peak_bin_mask])
         else:
-            self.jacie_ref_radiance = np.nanmean(im_array_rad_m)
+            self.peak_ref_radiance = np.nanmean(im_array_rad_m)

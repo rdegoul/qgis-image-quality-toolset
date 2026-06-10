@@ -223,7 +223,7 @@ In the Processing Toolbox, under **ImageQualityToolset**, 3 methods are availabl
 
 - **Bridge Method MTF**
 - **Knife Edge Method MTF**
-- **Jacie/Variogram Method SNR**
+- **Variogram Method SNR**
 
 All these methods need an image and a ROI to work.
 
@@ -368,7 +368,7 @@ The SNR Estimator produces a single multi-panel figure with four graphs:
 | **Top-left — "SNR Points"** | Input image in grayscale with selected uniform pixels overlaid; text box shows percentage of pixels retained by the mask |
 | **Top-right — "Variogram"** | Variogram (blue dots/line) and the fitted model. X-axis: distance in meters; Y-axis: semi-variance γ(h) |
 | **Bottom-left — "Radiance Distribution"** | Step histogram of pixel count per radiance bin (1 W/(m².str.µm) bins); text box shows mean and standard deviation of radiance values |
-| **Bottom-right — "SNR JACIE Method"** | Step histogram of per-pixel local SNR values; text box annotates peak SNR value and its corresponding reference radiance |
+| **Bottom-right — "SNR Method"** | Step histogram of per-pixel local SNR values; text box annotates peak SNR value and its corresponding reference radiance |
 
 ---
 
