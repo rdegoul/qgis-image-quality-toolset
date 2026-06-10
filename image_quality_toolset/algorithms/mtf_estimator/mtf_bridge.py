@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 from scipy.stats import linregress
+from scipy.optimize import curve_fit
 
 from ..tools.esf_models import (
     sigmoide, esf_tanh, esf_fermi, esf_gauss_exp_param,
@@ -606,6 +607,8 @@ class MtfBridge(Mtf):
         self.yo_input[start:end] = 1
 
         return np.array([self.x_lsf, self.y_lsf])
+    
+    
 
     def computeMtf(self):
         """
@@ -625,6 +628,14 @@ class MtfBridge(Mtf):
         m2 = f<=1
         mask = ( m1 ) & (m2)
 
+        k_local_max = (2 * np.linspace(0,len(f),len(f)) + 1 ) / (2 * self.bridge_width)
+        m1 = k_local_max >= 0
+        m2 = k_local_max < 1
+        m_k_max = (m1) & (m2)
+
+        u = k_local_max[m_k_max]
+        local_max_indice = np.array([np.argmin(np.abs(f[mask] - k)) for k in u])
+
         self.fft_output_masked = fft_output[mask]
         self.fft_input_masked = fft_input[mask]
 
@@ -633,7 +644,21 @@ class MtfBridge(Mtf):
 
         R_1 = np.divide(fft_output, fft_input)
         R_1_masked = np.absolute(R_1[mask])
+        R_2_masked_max = np.absolute(R_1[local_max_indice])
         self._mtf = np.absolute(R_1_masked/np.max(R_1_masked))
+        self.f_clean = f[local_max_indice]
+
+        def mtf_sincexp(f, d, lbd):
+            return (np.sinc(np.pi * d * f)**2) * np.exp(- lbd * f)
+
+        popt, pcov = curve_fit(mtf_sincexp, self.f_clean, R_2_masked_max, p0=[2.0, 1.5],
+                       bounds=([0.1, 0.0], [30.0, 30.0]),
+                       maxfev=5000
+                       )
+        d_fit, lbd = popt
+
+        self.display_frequencies = np.linspace(0,1,11)
+        self.R2_smoothed = mtf_sincexp(self.display_frequencies, d_fit, lbd)
 
 
         self._lsf = np.fft.ifftshift(R_1)
@@ -647,27 +672,27 @@ class MtfBridge(Mtf):
         self.f = f[mask]
 
         # MTF at Nyquist (0.5 cycles/pixel) via linear interpolation
-        for rec, val in enumerate(self.f):
+        for rec, val in enumerate(self.display_frequencies):
             if val > 0.5:
                 break
-        a = (self.mtf[rec] - self.mtf[rec - 1]) / (self.f[rec] - self.f[rec - 1])
-        b = self.mtf[rec] - self.f[rec] * a
+        a = (self.R2_smoothed[rec] - self.R2_smoothed[rec - 1]) / (self.display_frequencies[rec] - self.display_frequencies[rec - 1])
+        b = self.R2_smoothed[rec] - self.display_frequencies[rec] * a
         self.MTF_NYQ = a * 0.5 + b
 
         # MTF30
-        for rec, val in enumerate(self.mtf):
+        for rec, val in enumerate(self.R2_smoothed):
             if val < 0.3:
                 break
-        a = (self.f[rec] - self.f[rec - 1]) / (self.mtf[rec] - self.mtf[rec - 1])
-        b = self.f[rec] - self.mtf[rec] * a
+        a = (self.display_frequencies[rec] - self.display_frequencies[rec - 1]) / (self.R2_smoothed[rec] - self.R2_smoothed[rec - 1])
+        b = self.display_frequencies[rec] - self.R2_smoothed[rec] * a
         self.MTF30 = a * 0.3 + b
 
         # MTF50
-        for rec, val in enumerate(self.mtf):
+        for rec, val in enumerate(self.R2_smoothed):
             if val < 0.5:
                 break
-        a = (self.f[rec] - self.f[rec - 1]) / (self.mtf[rec] - self.mtf[rec - 1])
-        b = self.f[rec] - self.mtf[rec] * a
+        a = (self.display_frequencies[rec] - self.display_frequencies[rec - 1]) / (self.R2_smoothed[rec] - self.R2_smoothed[rec - 1])
+        b = self.display_frequencies[rec] - self.R2_smoothed[rec] * a
         self.MTF50 = a * 0.5 + b
 
         return self.mtf
@@ -757,7 +782,8 @@ class MtfBridge(Mtf):
         # --- Subplot 3: MTF curve (up to Nyquist) ---
         plt.subplot(2, 3, 3)
         mask_nyq = self.f <= 1
-        plt.plot(self.f[mask_nyq], self.mtf, color='k', ls='-')
+        #plt.plot(self.f[mask_nyq], self.mtf, color='k', ls='-')
+        plt.plot(self.display_frequencies, self.R2_smoothed, color='k', ls='-')
         plt.axhline(0.3, color="b", ls=':', linewidth=2, label=f"MTF30 = {self.MTF30:.2f}")
         plt.axvline(self.MTF30, color="b", ls=':', linewidth=2)
         plt.axhline(0.5, color="g", ls=':', linewidth=2, label=f"MTF50 = {self.MTF50:.2f}")
