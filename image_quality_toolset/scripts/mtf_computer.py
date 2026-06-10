@@ -118,7 +118,7 @@ def process_algorithm(config_file, feedback=None):
             mtf = SNR(vlayer, image, band_n, window_size, snr_precision,
                       L_min, L_max, feedback=feedback)
             mtf.variogram_snr(samples=nb_samples, gsd=gsd_value, lag=lag, plot=False)
-            mtf.compute_jacie_snr()
+            mtf.compute_peak_snr()
             mtf.second_method()
             mtf.print_output()
             # Optional: Save figure to file
@@ -154,7 +154,7 @@ def process_algorithm(config_file, feedback=None):
                 gsd_value = gsd
             mtf = SNR(img_array/np.nanmax(img_array), band_number=band_n, feedback=feedback, roi=None)
             mtf.variogram_snr(samples=nb_samples, gsd=gsd_value, lag=lag, plot=True)
-            mtf.compute_jacie_snr()
+            mtf.compute_peak_snr()
             mtf.second_method()
             mtf.print_output()
         else:
@@ -191,7 +191,7 @@ def process_algorithm(config_file, feedback=None):
             mtf = SNR(img_array/np.nanmax(img_array), band_number=band_n, feedback=feedback, roi=None)
 
             mtf.variogram_snr(samples=nb_samples, gsd=gsd_value, lag=lag, plot=True)
-            mtf.compute_jacie_snr()
+            mtf.compute_peak_snr()
             mtf.second_method()
             mtf.print_output()
         else:
