@@ -16,6 +16,7 @@
 # -------------------------------------------------------------------------
 
 import os
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,6 +43,113 @@ from .mtf_common import (
     knife_edge1,
     sgolayfilt,
 )
+
+
+def estimate_angle_from_bridge(
+    image: np.ndarray,
+    debug: bool = True,
+    debug_dir: Optional[str] = None,
+) -> float:
+    """
+    Estimate the orientation angle of a bridge from its image.
+
+    Steps:
+      1. Normalise image to [0, 1].
+      2. Binarize with Otsu threshold.
+      3. Denoise with morphological opening.
+      4. Skeletonize to a single-pixel line.
+      5. Linear regression on skeleton pixels (cols ~ rows).
+      6. Return angle = 90 - mod(arctan(slope) * 180/pi, 90),
+         consistent with the convention used throughout the MTF pipeline.
+
+    :param image: 2D float numpy array (single spectral band).
+    :param debug: If True, produce diagnostic figures for each processing step.
+    :param debug_dir: Directory to save debug figures. If None and debug is True,
+        figures are displayed with plt.show() instead.
+    :return: Estimated angle in degrees in [0, 90].
+    :raises ImportError: if scikit-image is not installed.
+    :raises ValueError: if the image is flat or produces too few skeleton pixels.
+    """
+    try:
+        from skimage.filters import threshold_otsu
+        from skimage.morphology import binary_opening, disk, skeletonize
+    except ImportError as exc:
+        raise ImportError(
+            "scikit-image is required for estimate_angle_from_bridge. "
+            "Install it with:  pip install scikit-image"
+        ) from exc
+
+    img = image.astype(np.float64)
+    img_range = img.max() - img.min()
+    if img_range == 0:
+        raise ValueError("Image has no contrast; cannot estimate bridge angle.")
+    img_norm = (img - img.min()) / img_range
+
+    thresh = threshold_otsu(img_norm)
+    binary = img_norm > thresh
+
+    binary = binary_opening(binary, disk(2))
+
+    skeleton = skeletonize(binary)
+
+    rows, cols = np.where(skeleton)
+    if len(rows) < 2:
+        raise ValueError(
+            "Not enough skeleton pixels to estimate angle. "
+            "Check that the image contains a clearly visible bridge."
+        )
+
+    lr = linregress(rows, cols)
+    angle = np.arctan(lr.slope) * 180 / np.pi
+
+    if debug:
+        _save_or_show = _make_debug_saver(debug_dir)
+
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        fig.suptitle(f"estimate_angle_from_bridge — estimated angle: {angle:.2f}°")
+
+        axes[0].imshow(img_norm, cmap="gray")
+        axes[0].set_title("1. Normalised image")
+        axes[0].axis("off")
+
+        axes[1].imshow(img_norm > thresh, cmap="gray")
+        axes[1].set_title(f"2. Otsu binary (thresh={thresh:.3f})")
+        axes[1].axis("off")
+
+        axes[2].imshow(binary, cmap="gray")
+        axes[2].set_title("3. After morphological opening")
+        axes[2].axis("off")
+
+        axes[3].imshow(img_norm, cmap="gray", alpha=0.6)
+        axes[3].imshow(skeleton, cmap="Reds", alpha=0.6)
+        fit_rows = np.array([rows.min(), rows.max()])
+        fit_cols = lr.slope * fit_rows + lr.intercept
+        axes[3].plot(fit_cols, fit_rows, "b-", linewidth=2,
+                     label=f"fit  slope={lr.slope:.3f}")
+        axes[3].set_title(f"4. Skeleton + regression → {angle:.2f}°")
+        axes[3].legend(fontsize=8)
+        axes[3].axis("off")
+
+        plt.tight_layout()
+        _save_or_show(fig, "angle_estimation_steps.png")
+
+    return float(angle)
+
+
+def _make_debug_saver(debug_dir: Optional[str]):
+    """Return a callable that either saves a figure or shows it."""
+    if debug_dir:
+        os.makedirs(debug_dir, exist_ok=True)
+
+        def _save(fig, filename: str):
+            fig.savefig(os.path.join(debug_dir, filename), dpi=150, bbox_inches="tight")
+            plt.close(fig)
+    else:
+        def _save(fig, filename: str):  # noqa: F811
+            plt.show()
+            plt.close(fig)
+
+    return _save
 
 
 class MtfBridge(Mtf):
@@ -209,7 +317,12 @@ class MtfBridge(Mtf):
         #         "Not enough valid transects. Try a bigger polygon or select a different edge. Exiting."
         #     )
         #     return None
-        self.input_angle = input_angle
+        if input_angle:
+            self.input_angle = input_angle
+        else:
+            self.estimated_angle = estimate_angle_from_bridge(
+                self.im_array, debug=self._debug, debug_dir=self._debug_dir
+            )
 
         # for i in range(0, 2):
         #     self.refineEdgeSubPx()
@@ -224,7 +337,7 @@ class MtfBridge(Mtf):
 
     @property
     def angle(self):
-        return self.input_angle
+        return self.input_angle if self.input_angle is not None else self.estimated_angle
 
     def computeEsf(self):
         """
@@ -259,7 +372,7 @@ class MtfBridge(Mtf):
 
     def get_oversample_image(self, sampling, edge_direction="CT", showGraphic=False, saveGraphic=True):
         self.console("   Clockwise Convention for Angle definition:")
-        self.console("   Input Angle is : {:0.2f} °".format(self.input_angle))
+        self.console("   Input Angle is : {:0.2f} °".format(self.angle))
 
         if self.im_array is None:
             self.console("NO ARRAY")
@@ -268,7 +381,7 @@ class MtfBridge(Mtf):
         self.sampling = sampling
         self.console(" -- Compute oversample matrix ")
         self.console("    Over Sampling factor  : {}".format(self.sampling))
-        self.console("    Rotation Angle        : {}°".format(self.input_angle))
+        self.console("    Rotation Angle        : {}°".format(self.angle))
         self.edge_direction = edge_direction
 
         if self.edge_direction == "CT":
@@ -766,7 +879,7 @@ class MtfBridge(Mtf):
         plt.plot(x, y, '+', label='inflexion point location')
         plt.plot(x, x * lr.slope + lr.intercept, '-', label='Interpolation')
         plt.title(
-            'Input angle : {:.2f}'.format(self.input_angle)
+            'Angle : {:.2f}'.format(self.angle)
         )
         plt.xlabel(g_xlabel)
         plt.ylabel(g_ylabel)
