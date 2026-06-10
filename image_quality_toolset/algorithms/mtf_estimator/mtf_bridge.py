@@ -807,14 +807,6 @@ class MtfBridge(Mtf):
         plt.grid()
 
         plt.tight_layout(rect=[0, 0, 1, 0.95])
-
-        if self._debug_dir:
-            filename = os.path.join(
-                self._debug_dir,
-                'bridge_mtf_1_in_' + self.MTF_direction + '_direction.png'
-            )
-            self._figure.savefig(filename, dpi=600)
-
         return [self._figure, self.panel2()]
 
     def panel2(self):
@@ -891,14 +883,14 @@ class MtfBridge(Mtf):
 
         ax1.fill_between(bin_edges, bin_means - bin_std, bin_means + bin_std,
                          color='k', linewidth=0, zorder=2, label=r'$\pm 1\sigma$')
-        ax1.plot(bin_edges, bin_means, '.', color='g', markersize=2, label='esf_bin_value')
+        ax1.plot(bin_edges, bin_means, '.', color='g', markersize=2, label='bin_value')
         ax2 = ax1.twinx()
         ax2.bar(bin_edges[:-1], bin_count[:-1], width=np.diff(bin_edges),
-                alpha=0.2, color='c', label='esf_bin_sample', align='edge')
+                alpha=0.2, color='c', label='esf_sample', align='edge')
         ax1.set_xlabel('Bin')
-        ax1.set_ylabel('esf value', color='g')
+        ax1.set_ylabel('value', color='g')
         ax1.tick_params(axis='y', labelcolor='g')
-        ax2.set_ylabel('esf bin sample', color='c')
+        ax2.set_ylabel('bin sample', color='c')
         ax2.tick_params(axis='y', labelcolor='c')
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
@@ -909,13 +901,6 @@ class MtfBridge(Mtf):
         nuage_min = np.min(self.nuage)
         nuage_max = np.max(self.nuage)
         nuage_norm = (self.nuage - nuage_min) / (nuage_max - nuage_min)
-
-        if self._debug_dir:
-            filename = os.path.join(
-                self._debug_dir,
-                'bridge_mtf_2_in_' + self.MTF_direction + '_direction.png'
-            )
-            plt.savefig(filename, dpi=600)
 
         return self._figure2
 
