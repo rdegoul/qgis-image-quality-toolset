@@ -275,20 +275,6 @@ def load_config(config_file):
         if config['parameters'].get('lag') is not None:
             params['lag'] = config['parameters'].getint('lag')
 
-        # Method 3 (SNR) specific parameters
-        if config['parameters'].get('window_size') is not None:
-            params['window_size'] = config['parameters'].getint('window_size')
-        if config['parameters'].get('snr_precision') is not None:
-            params['snr_precision'] = config['parameters'].getfloat('snr_precision')
-        if config['parameters'].get('L_min') is not None:
-            params['L_min'] = config['parameters'].getfloat('L_min')
-        if config['parameters'].get('L_max') is not None:
-            params['L_max'] = config['parameters'].getfloat('L_max')
-        if config['parameters'].get('nb_samples') is not None:
-            params['nb_samples'] = config['parameters'].getint('nb_samples')
-        if config['parameters'].get('lag') is not None:
-            params['lag'] = config['parameters'].getint('lag')
-
     # Load debug parameters
     if 'debug' in config:
         debug_dir = config['debug'].get('dir')
