@@ -77,7 +77,6 @@ def process_algorithm(config_file, feedback=None):
     L_max = config.get('L_max')
     nb_samples = config.get('nb_samples', 5000)
     lag = config.get('lag', 25)
-    gsd = config.get('gsd',30)
     sampling = config.get('sampling')
     input_angle = config.get('input_angle')
     bridge_width = config.get('bridge_width')
@@ -109,15 +108,9 @@ def process_algorithm(config_file, feedback=None):
             cols = memraster.RasterXSize
             band = memraster.GetRasterBand(1)
             image = np.float64(band.ReadAsArray(0, 0, cols, rows))
-            # Get GSD from GeoTransform if not provided
-            if gsd is None:
-                gt = memraster.GetGeoTransform()
-                gsd_value = abs(gt[1])
-            else:
-                gsd_value = gsd
             mtf = SNR(vlayer, image, band_n, window_size, snr_precision,
                       L_min, L_max, feedback=feedback)
-            mtf.variogram_snr(samples=nb_samples, gsd=gsd_value, lag=lag, plot=False)
+            mtf.variogram_snr(samples=nb_samples, lag=lag, plot=False)
             mtf.compute_peak_snr()
             mtf.second_method()
             mtf.print_output()
@@ -145,15 +138,8 @@ def process_algorithm(config_file, feedback=None):
                          bridge_width, edge_direction, esf_model, sampling,
                          input_angle=input_angle, feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'SNR':
-                        # Get GSD from image if not provided
-            if gsd is None:
-                gdal_layer = gdal.Open(image_path, gdal.GA_ReadOnly)
-                gt = gdal_layer.GetGeoTransform()
-                gsd_value = abs(gt[1])
-            else:
-                gsd_value = gsd
             mtf = SNR(img_array/np.nanmax(img_array), band_number=band_n, feedback=feedback, roi=None)
-            mtf.variogram_snr(samples=nb_samples, gsd=gsd_value, lag=lag, plot=True)
+            mtf.variogram_snr(samples=nb_samples, lag=lag, plot=True)
             mtf.compute_peak_snr()
             mtf.second_method()
             mtf.print_output()
@@ -182,15 +168,9 @@ def process_algorithm(config_file, feedback=None):
                          bridge_width, edge_direction, esf_model, sampling,
                          input_angle=input_angle, feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'SNR':
-            # Get GSD from GeoTransform if not provided
-            if gsd is None:
-                gt = gdal_layer.GetGeoTransform()
-                gsd_value = abs(gt[1])
-            else:
-                gsd_value = gsd
             mtf = SNR(img_array/np.nanmax(img_array), band_number=band_n, feedback=feedback, roi=None)
 
-            mtf.variogram_snr(samples=nb_samples, gsd=gsd_value, lag=lag, plot=True)
+            mtf.variogram_snr(samples=nb_samples, lag=lag, plot=True)
             mtf.compute_peak_snr()
             mtf.second_method()
             mtf.print_output()
@@ -294,8 +274,6 @@ def load_config(config_file):
             params['nb_samples'] = config['parameters'].getint('nb_samples')
         if config['parameters'].get('lag') is not None:
             params['lag'] = config['parameters'].getint('lag')
-        if config['parameters'].get('gsd') is not None:
-            params['gsd'] = config['parameters'].getfloat('gsd')
 
         # Method 3 (SNR) specific parameters
         if config['parameters'].get('window_size') is not None:
@@ -310,8 +288,6 @@ def load_config(config_file):
             params['nb_samples'] = config['parameters'].getint('nb_samples')
         if config['parameters'].get('lag') is not None:
             params['lag'] = config['parameters'].getint('lag')
-        if config['parameters'].get('gsd') is not None:
-            params['gsd'] = config['parameters'].getfloat('gsd')
 
     # Load debug parameters
     if 'debug' in config:

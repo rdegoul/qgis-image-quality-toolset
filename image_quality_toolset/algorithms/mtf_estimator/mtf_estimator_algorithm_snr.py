@@ -38,7 +38,6 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
     SNR_PRECISION = 'SNR_PRECISION'
     L_MIN = 'L_MIN'
     L_MAX = 'L_MAX'
-    GSD = 'GSD'
     SCALE = 'SCALE'
     OFFSET = 'OFFSET'
 
@@ -83,14 +82,6 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
         )
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.GSD,
-                self.tr("GSD (Ground Sample Distance in meters)"),
-                type=QgsProcessingParameterNumber.Integer,
-                defaultValue=30
-            )
-        )
-        self.addParameter(
-            QgsProcessingParameterNumber(
                 self.SCALE,
                 self.tr("Scale"),
                 type=QgsProcessingParameterNumber.Double,
@@ -112,7 +103,6 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
         snr_precision = self.parameterAsDouble(parameters, self.SNR_PRECISION, context)
         l_min = self.parameterAsDouble(parameters, self.L_MIN, context)
         l_max = self.parameterAsDouble(parameters, self.L_MAX, context)
-        gsd = self.parameterAsInt(parameters, self.GSD, context)
 
         # Get user-provided scale and offset parameters
         user_scale = self.parameterAsDouble(parameters, self.SCALE, context)
@@ -146,14 +136,14 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
         else:
             feedback.pushInfo(f"Using offset from raster metadata: {offset}")
 
-        mtf = self.create_mtf(vlayer, memraster, band_n, window_size, snr_precision, l_min, l_max, gsd, scale, offset, feedback)
+        mtf = self.create_mtf(vlayer, memraster, band_n, window_size, snr_precision, l_min, l_max, scale, offset, feedback)
 
         if not mtf.feedback.isCanceled():
             QCoreApplication.postEvent(self.result_widget, MTFEvent(self.id(), mtf, parameters))
 
         return {}
 
-    def create_mtf(self, vlayer, memraster, band_n, window_size, snr_precision, l_min, l_max, gsd, scale, offset, feedback):
+    def create_mtf(self, vlayer, memraster, band_n, window_size, snr_precision, l_min, l_max, scale, offset, feedback):
         rows = memraster.RasterYSize
         cols = memraster.RasterXSize
         band = memraster.GetRasterBand(1)
@@ -183,7 +173,6 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             snr_precision=snr_precision,
             L_min=l_min,
             L_max=l_max,
-            gsd=gsd,
             scale=scale,
             offset=offset,
             feedback=feedback
