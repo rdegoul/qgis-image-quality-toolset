@@ -107,14 +107,14 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
                 maxValue=1.0
             )
         )
-        self.addParameter(
-            QgsProcessingParameterNumber(
-                self.INPUT_ROTATION,
-                self.tr("Input rotation angle (degrees)"),
-                type=QgsProcessingParameterNumber.Double,
-                optional=True
-            )
+        input_rotation_param = QgsProcessingParameterNumber(
+            self.INPUT_ROTATION,
+            self.tr("Input rotation angle (degrees)"),
+            type=QgsProcessingParameterNumber.Double,
+            optional=True
         )
+        input_rotation_param.setHelp(self.tr("If left empty, the rotation angle is automatically estimated from the edge."))
+        self.addParameter(input_rotation_param)
         super().initAlgorithm(config=config)
         
     def processAlgorithm(self, parameters, context, feedback):
