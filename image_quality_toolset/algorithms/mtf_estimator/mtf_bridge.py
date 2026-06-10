@@ -709,14 +709,14 @@ class MtfBridge(Mtf):
         self._figure = plt.figure(figsize=(25, 15), dpi=100)
         plt.suptitle(f"{name} MTF Results (Bridge Method)", fontsize=28, fontweight='bold')
 
-        # --- Subplot 1: Measured LSF vs ideal rect input ---
+        # --- Subplot 1: Measured vs ideal rect input ---
         plt.subplot(2, 3, 1)
         x_centered = sc * (self.x_lsf - ox_lsf)
         y_norm = self.y_lsf / np.max(self.y_lsf) if np.max(self.y_lsf) != 0 else self.y_lsf
-        plt.plot(x_centered, y_norm, '+-', label='Measured LSF (output)')
+        plt.plot(x_centered, y_norm, '+-', label='Measured (output)')
         plt.plot(sc * (self.xo_input - ox_lsf), self.yo_input, '--',
                  label=f'Ideal rect (LT_w={self.bridge_width} px)')
-        plt.title('LSF: Measured vs Ideal Input', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        plt.title('Measured vs Ideal Input', fontname="Times New Roman", fontweight="bold", fontsize=20)
         plt.xlabel('Pixels')
         plt.ylabel('Normalized intensity')
         plt.legend()
