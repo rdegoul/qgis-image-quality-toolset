@@ -32,7 +32,6 @@ class SNR :
         snr_precision,
         L_min,
         L_max,
-        gsd=30,
         scale=1.0,
         offset=0.0,
         feedback=None,
@@ -51,7 +50,6 @@ class SNR :
             snr_precision: SNR precision for histogram binning
             L_min: Minimum radiance threshold
             L_max: Maximum radiance threshold
-            gsd: Ground Sample Distance in meters
             scale: Scale  factor to convert DN to radiance (default: 1.0)
             offset: Offset factor to convert DN to radiance (default: 0.0)
             feedback: QGIS feedback object
@@ -61,7 +59,6 @@ class SNR :
         self.roi = roi
         self.band_number = band_number
 
-        self.gsd = gsd
         self.scale = scale
         self.offset = offset
 
@@ -144,12 +141,11 @@ class SNR :
 
         self.variogram_data = None
 
-    def variogram_snr(self, samples=5000, gsd=30.0, lag=25, plot=True):
+    def variogram_snr(self, samples=5000, lag=25, plot=True):
         """Compute SNR using variogram analysis of the nugget effect.
 
         Args:
             samples: Number of points to sample (recommended: 3000-5000)
-            gsd: Ground Sample Distance in meters
             lag: Number of lag classes for variogram
             plot: Whether to display plots
 
@@ -171,7 +167,7 @@ class SNR :
         im_temp[mask == 0] = np.nan
         self.mask = mask
 
-        self.variogram_data = analyze_image_variogram(im_temp, gsd=self.gsd, n_samples=samples, lag=lag, plot=plot)
+        self.variogram_data = analyze_image_variogram(im_temp, n_samples=samples, lag=lag, plot=plot)
 
     def second_method(self):
         """Compute SNR statistics using binned radiance analysis.
@@ -334,7 +330,7 @@ class SNR :
             ax.axvline(x=vd['snr'], color='black', linestyle='--',
                        alpha=0.0, label=f'SNR = {vd["snr"]:.4f}')
             ax.legend(fontsize=9)
-        ax.set_xlabel('Distance (m)', fontsize=11)
+        ax.set_xlabel('Distance (pixels)', fontsize=11)
         ax.set_ylabel('Semi-variance γ(h)', fontsize=11)
         ax.set_title('Variogram', fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)

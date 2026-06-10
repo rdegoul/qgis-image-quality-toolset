@@ -196,13 +196,12 @@ class Variogram:
         return _spherical_model(h, r, c0, b)
 
 
-def analyze_image_variogram(image, gsd=1.0, n_samples=5000, lag=None, plot=True):
+def analyze_image_variogram(image, n_samples=5000, lag=None, plot=True):
     """
     Compute the image variogram and estimate SNR from the nugget effect.
 
     Args:
         image: 2D Array of radiance/reflectance values
-        gsd: Ground Sample Distance in meters
         n_samples: Number of points to sample (recommended: 3000-5000)
         lag: Number of lag classes for the variogram
         plot: Whether to generate plots (not fully used in this function)
@@ -264,10 +263,10 @@ def analyze_image_variogram(image, gsd=1.0, n_samples=5000, lag=None, plot=True)
             y_sample = np.random.randint(y_start, y_end, n_points_strata)
             x_sample = np.random.randint(x_start, x_end, n_points_strata)
             
-            # Coordinates in meters (using GSD)
+            # Coordinates in pixels
             coords_strata = np.column_stack([
-                x_sample * gsd,
-                y_sample * gsd
+                x_sample,
+                y_sample
             ])
             values_strata = image[y_sample, x_sample]
             
