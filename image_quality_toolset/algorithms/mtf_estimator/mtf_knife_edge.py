@@ -1461,10 +1461,6 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
                   fontname="Times New Roman", fontweight="bold", fontsize=20)
         plt.xlabel(' Pixels ')
         plt.grid()
-
-        if self._debug_dir:
-            filename = os.path.join(self._debug_dir, 'esf_mtf_1_in_' + self.MTF_direction + '_direction.png')
-            self._figure.savefig(filename, dpi=600)
         return [self._figure, self.panel2()]
 
     def panel2(self):
@@ -1701,9 +1697,5 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         plt.title(f'Normalized Interpolated ESF ( Cut )')
         plt.legend()
         plt.grid(True, alpha=0.3)
-
-        if self._debug_dir:
-            filename = os.path.join(self._debug_dir, 'esf_mtf_2_in_' + self.MTF_direction + '_direction.png')
-            plt.savefig(filename, dpi=600)
 
         return self._figure2
