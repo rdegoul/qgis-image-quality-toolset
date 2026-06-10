@@ -748,19 +748,15 @@ class MtfBridge(Mtf):
 
         text_str = (
             f"Method : Bridge FFT ratio\n"
-            f"ESF Model : {self.esf_func.__name__}\n"
             f"Bridge width : {self.bridge_width} px\n"
             f"Sampling: {self.sampling:.2f}\n"
             f"Number of lines : {self.ligne}\n"
             f"Number of columns : {self.colonnes}\n"
             f"Rotation angle : {self.angle:.2f}\n"
-            f"Length of the ESF : {length}\n"
             f"MTF @ Nyquist : {self.MTF_NYQ:.2f}\n"
             f"MTF 30 : {self.MTF30:.2f}\n"
             f"MTF 50 : {self.MTF50:.2f}\n"
-            f"RER : {self.RER:.2f}\n"
             f"FWHM : {self.FWHM:.2f} px\n"
-            f"R2 : {self.R2:.2f}\n"
             + (f"GRD : {self.GRD:.2f} m" if self.GRD is not None else "")
         )
 
