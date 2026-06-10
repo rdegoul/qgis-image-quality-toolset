@@ -52,8 +52,8 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
     def shortHelpString(self):
         return self.tr('The Bridge Method is an MTF measurement technique that uses a bridge-shaped test target consisting of two closely spaced edges forming a narrow “bridge” or slit. By imaging this structure, the system produces an intensity profile that combines the responses of the two edges. From this profile, the Line Spread Function (LSF) can be derived, and its Fourier transform yields the Modulation Transfer Function (MTF).')
 
-    def create_mtf(self, vlayer, memraster, band_n, scale, offset, px_margin, bridge_width, edge_direction, sampling, input_angle, feedback):
-        return MtfBridge(vlayer, memraster, band_n, scale, offset, px_margin, bridge_width, edge_direction, self.ESF_MODEL, sampling, input_angle, feedback)
+    def create_mtf(self, vlayer, memraster, band_n, scale, offset, px_margin, bridge_width, edge_direction, sampling, input_angle, feedback, debug_dir=None):
+        return MtfBridge(vlayer, memraster, band_n, scale, offset, px_margin, bridge_width, edge_direction, self.ESF_MODEL, sampling, input_angle, feedback, debug_dir=debug_dir)
 
     def initAlgorithm(self, config=None):
 
@@ -130,9 +130,11 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
         band_n = self.parameterAsInt(parameters, self.BAND, context)
         vlayer = self.parameterAsVectorLayer(parameters, self.ROI, context)
 
+        output_directory = self.parameterAsFile(parameters, self.OUTPUT_DIRECTORY, context)
+
         memraster = roi_extraction(raster_layer, band_n, vlayer, context, feedback)
 
-        mtf = self.create_mtf(vlayer, memraster, band_n, scale, offset, px_margin, bridge_width, edge_direction, sampling, input_angle, feedback)
+        mtf = self.create_mtf(vlayer, memraster, band_n, scale, offset, px_margin, bridge_width, edge_direction, sampling, input_angle, feedback, output_directory)
 
         self.process_results( mtf, parameters, context, feedback )
 

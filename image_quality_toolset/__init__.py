@@ -84,6 +84,7 @@ class ImageQualityToolSet:
             DependencyInfo(name="SciPy", import_name="scipy", min_version="1.7.0"),
             DependencyInfo(name="Matplotlib", import_name="matplotlib", min_version="3.4.0"),
             DependencyInfo(name="loess", import_name="loess", min_version="2.1.2"),
+            DependencyInfo(name="scikit-image", import_name="skimage", package="scikit-image"),
         ]
 
         # Start background check

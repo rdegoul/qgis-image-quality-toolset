@@ -36,15 +36,13 @@ class SNR :
         scale=1.0,
         offset=0.0,
         feedback=None,
-        debug=False,
-        debug_dir=None,
     ):
         """
         SNR estimation using multiple methods:
         - Variogram nugget effect analysis
         - Local statistics (mean/std) in uniform regions
         - JACIE peak-histogram method
-        
+
         Args:
             roi: Region of interest vector layer
             image: Input image data (DN values)
@@ -57,8 +55,6 @@ class SNR :
             scale: Scale  factor to convert DN to radiance (default: 1.0)
             offset: Offset factor to convert DN to radiance (default: 0.0)
             feedback: QGIS feedback object
-            debug: Enable debug mode
-            debug_dir: Directory for debug outputs
         """
         self._isValid = True
         self.feedback = feedback
@@ -68,9 +64,6 @@ class SNR :
         self.gsd = gsd
         self.scale = scale
         self.offset = offset
-
-        self._debug = debug
-        self._debug_dir = debug_dir
 
         self.mask = None
 

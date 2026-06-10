@@ -22,8 +22,7 @@ import matplotlib.pyplot as plt
 
 
 def rotate_mat(im, angle,
-               oversample=0.25, margin=1,
-               debug=False, debug_dir=None):
+               oversample=0.25, margin=1):
     '''
     Rotate and oversample an image matrix for MTF analysis.
 
@@ -37,10 +36,6 @@ def rotate_mat(im, angle,
         Oversampling factor (default 0.25)
     margin : int
         Margin in pixels for edge detection (default 1)
-    debug : bool
-        Enable debug mode to generate visualizations
-    debug_dir : str
-        Directory to save debug figures
     '''
 
     step = 1.0
@@ -181,19 +176,10 @@ def edge_subpixel_location(im_array,
         Oversampling factor
     margin : int
         Margin in pixels to exclude from edge detection
-    debug : bool
-        Enable debug mode to generate visualizations
-    debug_dir : str
-        Directory to save debug figures
     '''
 
     # output:
     out = np.zeros((im_array.shape[0], 1), np.float64)
-
-    # Store debug data for a few sample rows
-    debug_samples = []
-    sample_rows = [0, im_array.shape[0] // 4, im_array.shape[0] // 2,
-                   3 * im_array.shape[0] // 4, im_array.shape[0] - 1]
 
     # Iterate over input image rows:
     for i in range(0, im_array.shape[0], 1):
