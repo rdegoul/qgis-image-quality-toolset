@@ -660,15 +660,7 @@ class MtfBridge(Mtf):
         self.display_frequencies = np.linspace(0,1,11)
         self.R2_smoothed = mtf_sincexp(self.display_frequencies, d_fit, lbd)
 
-
         self._lsf = np.fft.ifftshift(R_1)
-
-        # outlier_mask = self._mtf > 2
-        # if outlier_mask.any():
-        #     valid_indices = np.where(~outlier_mask)[0]
-        #     all_indices = np.arange(len(self._mtf))
-        #     self._mtf = np.interp(all_indices, valid_indices, self._mtf[valid_indices])
-
         self.f = f[mask]
 
         # MTF at Nyquist (0.5 cycles/pixel) via linear interpolation
