@@ -50,7 +50,7 @@ class MTFEstimatorAlgorithmKnifeEdge(BaseMTFEstimatorAlgorithm):
         return self.tr('The Knife Edge Method is an optical test technique used to determine the Modulation Transfer Function (MTF) of an imaging system. Instead of directly measuring sinusoidal patterns, the method captures the image of a sharp knife‑edge target. From this captured image, the Edge Spread Function (ESF) is extracted by profiling the intensity transition across the edge. By differentiating the ESF, the Line Spread Function (LSF) is obtained, and taking the Fourier transform of the LSF yields the MTF.')
 
     def create_mtf(self, vlayer, memraster, band_n, scale, offset, px_margin, edge_direction, esf_model, sampling, feedback, debug_dir=None, input_angle=None):
-        return MtfKnifeEdge(vlayer, memraster, band_n, scale, offset, px_margin, edge_direction, esf_model, sampling, input_angle=input_angle, feedback=feedback, debug=False, debug_dir=debug_dir)
+        return MtfKnifeEdge(vlayer, memraster, band_n, scale, offset, px_margin, edge_direction, esf_model, sampling, input_angle=input_angle, feedback=feedback, debug_dir=debug_dir)
 
     def initAlgorithm(self, config=None):
         self.addParameter(

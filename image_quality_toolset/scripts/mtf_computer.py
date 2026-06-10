@@ -60,8 +60,8 @@ def process_algorithm(config_file, feedback=None):
 
     method = config.get('method')
     band_n = config.get('band_n')
-    debug = config.get('debug')
     debug_dir = config.get('debug_dir')
+    expert_mode = config.get('expert_mode', False)
 
     # Method 2 specific parameters
     scale = config.get('scale')
@@ -99,11 +99,11 @@ def process_algorithm(config_file, feedback=None):
         if method == 'MTF':
             mtf = MtfKnifeEdge(vlayer, memraster, band_n, scale, offset, px_margin,
                          edge_direction, esf_model, sampling, input_angle=input_angle,
-                         feedback=feedback, debug=debug, debug_dir=debug_dir)
+                         feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'MTF_BRIDGE':
             mtf = MtfBridge(vlayer, memraster, band_n, scale, offset, px_margin,
                          bridge_width, edge_direction, esf_model, sampling,
-                         input_angle=input_angle, feedback=feedback, debug=debug, debug_dir=debug_dir)
+                         input_angle=input_angle, feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'SNR':
             rows = memraster.RasterYSize
             cols = memraster.RasterXSize
@@ -116,13 +116,13 @@ def process_algorithm(config_file, feedback=None):
             else:
                 gsd_value = gsd
             mtf = SNR(vlayer, image, band_n, window_size, snr_precision,
-                      L_min, L_max, feedback=feedback, debug=debug, debug_dir=debug_dir)
+                      L_min, L_max, feedback=feedback)
             mtf.variogram_snr(samples=nb_samples, gsd=gsd_value, lag=lag, plot=False)
             mtf.compute_jacie_snr()
             mtf.second_method()
             mtf.print_output()
             # Optional: Save figure to file
-            if debug and debug_dir:
+            if debug_dir:
                 os.makedirs(debug_dir, exist_ok=True)
                 fig = mtf.figure()[0]
                 fig.savefig(os.path.join(debug_dir, 'snr_analysis.png'), dpi=150, bbox_inches='tight')
@@ -139,11 +139,11 @@ def process_algorithm(config_file, feedback=None):
         if method == 'MTF':
             mtf = MtfKnifeEdge(None, memraster, band_n, scale, offset, px_margin,
                          edge_direction, esf_model, sampling, input_angle=input_angle,
-                         feedback=feedback, debug=debug, debug_dir=debug_dir)
+                         feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'MTF_BRIDGE':
             mtf = MtfBridge(None, memraster, band_n, scale, offset, px_margin,
                          bridge_width, edge_direction, esf_model, sampling,
-                         input_angle=input_angle, feedback=feedback, debug=debug, debug_dir=debug_dir)
+                         input_angle=input_angle, feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'SNR':
                         # Get GSD from image if not provided
             if gsd is None:
@@ -176,11 +176,11 @@ def process_algorithm(config_file, feedback=None):
         if method == 'MTF':
             mtf = MtfKnifeEdge(None, memraster, band_n, scale, offset, px_margin,
                          edge_direction, esf_model, sampling, input_angle=input_angle,
-                         feedback=feedback, debug=debug, debug_dir=debug_dir)
+                         feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'MTF_BRIDGE':
             mtf = MtfBridge(None, memraster, band_n, scale, offset, px_margin,
                          bridge_width, edge_direction, esf_model, sampling,
-                         input_angle=input_angle, feedback=feedback, debug=debug, debug_dir=debug_dir)
+                         input_angle=input_angle, feedback=feedback, debug_dir=debug_dir, expert_mode=expert_mode)
         elif method == 'SNR':
             # Get GSD from GeoTransform if not provided
             if gsd is None:
@@ -217,8 +217,8 @@ def load_config(config_file):
         ...
 
         [debug]
-        enabled = true
         dir = /path/to/debug
+        expert_mode = false
 
     Args:
         config_file: Path to INI configuration file
@@ -315,11 +315,11 @@ def load_config(config_file):
 
     # Load debug parameters
     if 'debug' in config:
-        params['debug'] = config['debug'].getboolean('enabled')
         debug_dir = config['debug'].get('dir')
         if debug_dir is not None:
             debug_dir = os.path.expandvars(debug_dir)
         params['debug_dir'] = debug_dir
+        params['expert_mode'] = config['debug'].getboolean('expert_mode', fallback=False)
 
     return params
 

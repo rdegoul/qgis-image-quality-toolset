@@ -47,7 +47,7 @@ from .mtf_common import (
 
 def estimate_angle_from_bridge(
     image: np.ndarray,
-    debug: bool = True,
+    expert_mode: bool = False,
     debug_dir: Optional[str] = None,
 ) -> float:
     """
@@ -63,9 +63,9 @@ def estimate_angle_from_bridge(
          consistent with the convention used throughout the MTF pipeline.
 
     :param image: 2D float numpy array (single spectral band).
-    :param debug: If True, produce diagnostic figures for each processing step.
-    :param debug_dir: Directory to save debug figures. If None and debug is True,
-        figures are displayed with plt.show() instead.
+    :param expert_mode: If True and debug_dir is set, save a diagnostic figure
+        for each processing step to debug_dir.
+    :param debug_dir: Directory to save debug figures.
     :return: Estimated angle in degrees in [0, 90].
     :raises ImportError: if scikit-image is not installed.
     :raises ValueError: if the image is flat or produces too few skeleton pixels.
@@ -102,8 +102,8 @@ def estimate_angle_from_bridge(
     lr = linregress(rows, cols)
     angle = np.arctan(lr.slope) * 180 / np.pi
 
-    if debug:
-        _save_or_show = _make_debug_saver(debug_dir)
+    if expert_mode and debug_dir:
+        os.makedirs(debug_dir, exist_ok=True)
 
         fig, axes = plt.subplots(1, 4, figsize=(20, 5))
         fig.suptitle(f"estimate_angle_from_bridge — estimated angle: {angle:.2f}°")
@@ -131,25 +131,10 @@ def estimate_angle_from_bridge(
         axes[3].axis("off")
 
         plt.tight_layout()
-        _save_or_show(fig, "angle_estimation_steps.png")
+        fig.savefig(os.path.join(debug_dir, "angle_estimation_steps.png"), dpi=150, bbox_inches="tight")
+        plt.close(fig)
 
     return float(angle)
-
-
-def _make_debug_saver(debug_dir: Optional[str]):
-    """Return a callable that either saves a figure or shows it."""
-    if debug_dir:
-        os.makedirs(debug_dir, exist_ok=True)
-
-        def _save(fig, filename: str):
-            fig.savefig(os.path.join(debug_dir, filename), dpi=150, bbox_inches="tight")
-            plt.close(fig)
-    else:
-        def _save(fig, filename: str):  # noqa: F811
-            plt.show()
-            plt.close(fig)
-
-    return _save
 
 
 class MtfBridge(Mtf):
@@ -197,8 +182,8 @@ class MtfBridge(Mtf):
         sampling=0.2,
         input_angle=None,
         feedback=None,
-        debug=False,
         debug_dir=None,
+        expert_mode=False,
     ):
         """
         Create MTF Bridge Target Object.
@@ -213,15 +198,16 @@ class MtfBridge(Mtf):
         :param esf_model: ESF fitting model name (default: 'esf_to_eq_space_polynomial').
         :param sampling: Oversampling factor [0, 1] (default: 0.2).
         :param input_angle: If provided, overrides the estimated angle (degrees).
-        :param debug: Enable debug mode to save visualisations.
-        :param debug_dir: Directory to save debug figures.
+        :param debug_dir: Directory to save result and debug figures.
+        :param expert_mode: If True, also save additional step-by-step debug
+            figures to debug_dir (e.g. bridge angle estimation steps).
         """
         super().__init__(roi, image, feedback)
 
-        self._debug = debug
         self._debug_dir = debug_dir
+        self._expert_mode = expert_mode
 
-        if self._debug and self._debug_dir:
+        if self._debug_dir:
             os.makedirs(self._debug_dir, exist_ok=True)
 
         if esf_model not in self.VALID_ESF_MODELS:
@@ -321,7 +307,7 @@ class MtfBridge(Mtf):
             self.input_angle = input_angle
         else:
             self.estimated_angle = estimate_angle_from_bridge(
-                self.im_array, debug=self._debug, debug_dir=self._debug_dir
+                self.im_array, expert_mode=self._expert_mode, debug_dir=self._debug_dir
             )
 
         # for i in range(0, 2):
@@ -392,8 +378,6 @@ class MtfBridge(Mtf):
                 self.angle,
                 oversample=self.sampling,
                 margin=self.px_margin,
-                debug=self._debug,
-                debug_dir=self._debug_dir,
             )
             infl_pos = np.flip(infl_pos)
             center_pos = np.flip(center_pos)
@@ -406,8 +390,6 @@ class MtfBridge(Mtf):
                 self.angle,
                 oversample=self.sampling,
                 margin=self.px_margin,
-                debug=self._debug,
-                debug_dir=self._debug_dir,
             )
             self.AL_EDGE = AL_EDGE
 
@@ -812,7 +794,7 @@ class MtfBridge(Mtf):
 
         plt.tight_layout(rect=[0, 0, 1, 0.95])
 
-        if self._debug:
+        if self._debug_dir:
             filename = os.path.join(
                 self._debug_dir,
                 'bridge_mtf_1_in_' + self.MTF_direction + '_direction.png'
@@ -914,7 +896,7 @@ class MtfBridge(Mtf):
         nuage_max = np.max(self.nuage)
         nuage_norm = (self.nuage - nuage_min) / (nuage_max - nuage_min)
 
-        if self._debug:
+        if self._debug_dir:
             filename = os.path.join(
                 self._debug_dir,
                 'bridge_mtf_2_in_' + self.MTF_direction + '_direction.png'

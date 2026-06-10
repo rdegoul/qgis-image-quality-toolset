@@ -78,8 +78,8 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         sampling=0.2,
         input_angle=None,
         feedback=None,
-        debug=False,
         debug_dir=None,
+        expert_mode=False,
     ):
         """
         Create MTF Target Object
@@ -92,8 +92,9 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         :param scale: Conversion to Radiance , Image_DN * scale = Image_Radiance
         :param px_margin: To cut image line / column when searching inflextion point.
         :param input_angle: If provided, skips the angle estimation from refineEdgeSubPx and uses this value instead (degrees).
-        :param debug: Enable debug mode to generate visualizations.
-        :param debug_dir: Directory to save debug figures.
+        :param debug_dir: Directory to save result and debug figures.
+        :param expert_mode: If True, also save additional step-by-step debug
+            figures to debug_dir (e.g. per-row sigmoid edge fits).
         """
 
         super().__init__(
@@ -102,11 +103,10 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             feedback
         )
 
-        self._debug = debug
         self._debug_dir = debug_dir
+        self._expert_mode = expert_mode
 
-        # Create debug directory if debug mode is activated
-        if self._debug and self._debug_dir:
+        if self._debug_dir:
             os.makedirs(self._debug_dir, exist_ok=True)
 
         if esf_model not in self.VALID_ESF_MODELS:
@@ -196,7 +196,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             # Find subpx edge position
             initGuess = None
             if t.isValid():
-                popt, pcov = t.sigmoidFit(initGuess)
+                popt, pcov = t.sigmoidFit(initGuess, expert_mode=self._expert_mode, debug_dir=self._debug_dir)
 
                 if popt is False or t.EdgeSubPx is None:
                     t.invalidate()
@@ -308,8 +308,6 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
                 self.angle,
                 oversample=self.sampling,
                 margin=self.px_margin,
-                debug=self._debug,
-                debug_dir=self._debug_dir,
             )
             # Re oriente CT EDGE
             infl_pos = np.flip(infl_pos)
@@ -325,8 +323,6 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
                 self.angle,
                 oversample=self.sampling,
                 margin=self.px_margin,
-                debug=self._debug,
-                debug_dir=self._debug_dir,
             )
             self.AL_EDGE = AL_EDGE
 
@@ -1466,7 +1462,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         plt.xlabel(' Pixels ')
         plt.grid()
 
-        if self._debug:
+        if self._debug_dir:
             filename = os.path.join(self._debug_dir, 'esf_mtf_1_in_' + self.MTF_direction + '_direction.png')
             self._figure.savefig(filename, dpi=600)
         return [self._figure, self.panel2()]
@@ -1706,7 +1702,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         plt.legend()
         plt.grid(True, alpha=0.3)
 
-        if self._debug:
+        if self._debug_dir:
             filename = os.path.join(self._debug_dir, 'esf_mtf_2_in_' + self.MTF_direction + '_direction.png')
             plt.savefig(filename, dpi=600)
 

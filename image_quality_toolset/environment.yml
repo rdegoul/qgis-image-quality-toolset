@@ -13,3 +13,4 @@ dependencies:
   - ipywidgets
   - pip:
     - loess==2.1.2
+    - scikit-image

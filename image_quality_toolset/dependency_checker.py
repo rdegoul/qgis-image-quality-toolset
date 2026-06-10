@@ -605,6 +605,7 @@ if __name__ == "__main__":
         DependencyInfo("SciPy", "scipy", min_version="1.7.0"),
         DependencyInfo("Matplotlib", "matplotlib", min_version="3.4.0"),
         DependencyInfo("loess", "loess", min_version="2.1.2"),
+        DependencyInfo("scikit-image", "skimage", package="scikit-image"),
     ]
 
     checker = DependencyChecker(EXAMPLE_DEPENDENCIES)

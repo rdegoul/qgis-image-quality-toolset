@@ -99,7 +99,7 @@ class Transect:
 
         self.EdgePx = maxPx[0]
 
-    def sigmoidFit(self, initGuess, debug=False, debug_dir=None):
+    def sigmoidFit(self, initGuess, expert_mode=False, debug_dir=None):
         if initGuess is None:
             initGuess = [np.min(self.__Y), np.max(self.__Y), 1.0, -self.EdgePx]
 
@@ -112,7 +112,7 @@ class Transect:
         except:
             return False, False
 
-        if debug:
+        if expert_mode and debug_dir:
             fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
             # Left panel: Data and fitted sigmoid
@@ -145,12 +145,10 @@ class Transect:
 
             plt.tight_layout()
 
-            if debug_dir:
-                import os
-                fig.savefig(os.path.join(debug_dir, f'sigmoid_fit_row_{int(self.Row):04d}.png'), dpi=150)
-                plt.close(fig)
-            else:
-                plt.show()
+            import os
+            os.makedirs(debug_dir, exist_ok=True)
+            fig.savefig(os.path.join(debug_dir, f'sigmoid_fit_row_{int(self.Row):04d}.png'), dpi=150)
+            plt.close(fig)
 
         return popt, pcov
 
