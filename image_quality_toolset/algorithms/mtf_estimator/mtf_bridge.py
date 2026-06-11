@@ -786,7 +786,7 @@ class MtfBridge(Mtf):
 
         # --- Subplot 4: ESF fit ---
         plt.subplot(2, 3, 4)
-        plt.plot((self.x_lsf[1:] - self.a3) * self.sampling,np.abs(self._lsf)[1:],label = 'Rebuild LSF')
+        plt.plot((self.x_lsf[1:] - self.a3) * self.sampling,np.abs(self._lsf)[1:]/ np.max(self._lsf[1:]),label = 'Rebuild LSF')
         plt.plot((self.x_lsf[1:] - self.a3) * self.sampling,self.fwhm[1:]/np.max(self._lsf[1:]),label = 'FWHM')
         # plt.plot(sc * (self.x - ox_esf), self.nuage, 'o', label='Original ESF')
         # plt.plot(sc * (self.x_esf0 - ox_esf), self.y_esf0, '+', label='Fitted ESF')
