@@ -527,7 +527,7 @@ Note that shapefiles consist of multiple files (`.shp`, `.dbf`, `.shx`, `.prj`, 
 The final version of the plugin will include:
 
 1. **MTF computation from a knife edge ROI** — MTF Knife Edge Method (implemented).
-2. **MTF computation from a pulse ROI** — MTF Pulse Method (in progress).
+2. **MTF computation from a pulse ROI** — MTF Pulse Method (implemented).
 3. **SNR computation** — SNR Method (implemented).
 4. **Automatic installation** via QGIS Plugin Manager (planned).
 
