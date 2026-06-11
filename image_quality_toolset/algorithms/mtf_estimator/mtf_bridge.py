@@ -585,8 +585,11 @@ class MtfBridge(Mtf):
         L_w = 2 * w
         self.console(f'PSF Extent Radius {w:.3f} pixels')
 
-        x_lsf_trimmed, y_lsf_trimmed = trimLSF(self.x_esf, self.y_esf, L_w, self.sampling)
+        n = 6
+        fwhm = compute_fwhm(self.y_esf,self.sampling)
 
+        x_lsf_trimmed, y_lsf_trimmed = trimLSF(self.x_esf, self.y_esf, n*fwhm, self.sampling)
+        
         self.x_lsf = x_lsf_trimmed
         self.y_lsf = y_lsf_trimmed
         self.x_lsf_input = x_lsf_trimmed
