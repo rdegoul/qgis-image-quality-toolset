@@ -661,6 +661,10 @@ class MtfBridge(Mtf):
         self.R2_smoothed = mtf_sincexp(self.display_frequencies, d_fit, lbd)
 
         self._lsf = np.fft.ifftshift(R_1)
+        self._lsf = np.abs(self._lsf)[1:]
+
+        self.FWHM = compute_fwhm(self._lsf, self.sampling)
+        self.fwhm = toDisplay_FWHM(self._lsf)
         self.f = f[mask]
 
         # MTF at Nyquist (0.5 cycles/pixel) via linear interpolation
@@ -786,8 +790,8 @@ class MtfBridge(Mtf):
 
         # --- Subplot 4: ESF fit ---
         plt.subplot(2, 3, 4)
-        plt.plot((self.x_lsf[1:] - self.a3) * self.sampling,np.abs(self._lsf)[1:]/ np.max(self._lsf[1:]),label = 'Rebuild LSF')
-        plt.plot((self.x_lsf[1:] - self.a3) * self.sampling,self.fwhm[1:]/np.max(self._lsf[1:]),label = 'FWHM')
+        plt.plot((self.x_lsf[1:] - self.a3) * self.sampling,self._lsf/ np.max(self._lsf),label = 'Rebuild LSF')
+        plt.plot((self.x_lsf[1:] - self.a3) * self.sampling,self.fwhm/np.max(self._lsf),label = 'FWHM')
         # plt.plot(sc * (self.x - ox_esf), self.nuage, 'o', label='Original ESF')
         # plt.plot(sc * (self.x_esf0 - ox_esf), self.y_esf0, '+', label='Fitted ESF')
         plt.title('LSF', fontname="Times New Roman", fontweight="bold", fontsize=20)
@@ -916,30 +920,10 @@ class MtfBridge(Mtf):
         self.inflexion_value = m
         a3 = int(self.x_lsf[self.inflexion_value])
         self.a3 = a3
-        self.FWHM = compute_fwhm(self.y_lsf, self.sampling)
-        self.fwhm = toDisplay_FWHM(self.y_lsf)
+
 
         self.computeRER()
         self.computeHEE()
-
-        y = self.y_esf
-        g = np.abs(y[1:] - y[:-1])
-        i = np.argmax(g)
-        a3 = self.x_esf[i]
-        m_mask = [self.x > a3 - 2][0] & [self.x < a3 + 2][0]
-        infl = self.x[m_mask][0]
-
-        d = int(np.floor(n_snr * self.FWHM / self.sampling))
-        interval1 = infl - d
-        interval2 = infl + d
-
-        v1 = self.nuage[self.x < interval1]
-        v2 = self.nuage[self.x > interval2]
-
-        if self.nuage[0] > self.nuage[-1:]:
-            v1, v2 = v2, v1
-
-        #self.SNR, self.mean_H, self.mean_B = compute_snr(v1, v2)
 
     def computeRER(self, showGraphic=False, saveFig=True):
         xo = self.x_esf
