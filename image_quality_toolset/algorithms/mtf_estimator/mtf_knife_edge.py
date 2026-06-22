@@ -1420,8 +1420,18 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         # FIT ESF
         plt.subplot(2, 3, 4)
-        plt.plot(sc * (self.x - ox_esf), self.nuage, 'o', label="orginal esf")
-        plt.plot(sc * (self.x_esf0 - ox_esf), self.y_esf0, '+', label="interpolated esf")
+
+        nuage_min = np.min(self.nuage)
+        nuage_max = np.max(self.nuage)
+        nuage_norm = (self.nuage - nuage_min) / (nuage_max - nuage_min)
+
+        # Normalisation of the fitted ESF
+        y_esf_min = np.min(self.y_esf0)
+        y_esf_max = np.max(self.y_esf0)
+        y_esf_norm = (self.y_esf0 - y_esf_min) / (y_esf_max - y_esf_min)
+
+        plt.plot(sc * (self.x - ox_esf), nuage_norm, 'o', label="orginal esf")
+        plt.plot(sc * (self.x_esf0 - ox_esf), y_esf_norm, '+', label="interpolated esf")
 
         #            title(['esf, 2nd order poly interpolation, win size , 2 ou 1 - '  self.direction ' direction (' self.direction_code ' )'])
         plt.title(' ESF ', fontname="Times New Roman",
