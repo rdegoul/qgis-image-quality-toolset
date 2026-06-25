@@ -522,7 +522,39 @@ Note that shapefiles consist of multiple files (`.shp`, `.dbf`, `.shx`, `.prj`, 
 
 ---
 
-## 9. Roadmap
+## 9. License
+
+This project uses a dual-license model:
+
+| Component | License | Files |
+|-----------|---------|-------|
+| **QGIS plugin integration** | [GNU GPL v3](LICENSE) | Plugin entry point, QGIS algorithm wrappers, dock widget, raster/vector tools that use the QGIS API |
+| **Core algorithms** | [Apache 2.0](LICENSE-APACHE) | Pure signal-processing and math modules with no QGIS dependency |
+
+### Why dual licensing?
+
+QGIS is distributed under the GPL v3, which requires that any plugin directly interfacing with the QGIS API also be GPL-compatible. The core algorithmic layer (MTF, SNR, variogram, ESF models) has no dependency on QGIS and can therefore be released under the more permissive Apache 2.0 license, allowing reuse in other contexts (standalone scripts, other software).
+
+Apache 2.0 is compatible with GPL v3 ([FSF license list](https://www.gnu.org/licenses/license-list.html#apache2)): the Apache-licensed algorithms can be freely used by the GPL v3 plugin layer.
+
+### Apache 2.0 files (core algorithms — no QGIS dependency)
+
+- `algorithms/mtf_estimator/mtf_knife_edge.py`
+- `algorithms/mtf_estimator/mtf_bridge.py`
+- `algorithms/mtf_estimator/snr.py`
+- `algorithms/mtf_estimator/variogram.py`
+- `algorithms/tools/esf_models.py`
+- `algorithms/tools/oversampling_function.py`
+- `algorithms/setup.py`
+- `external_code/compute_snr_dg.py`
+
+### GPL v3 files (QGIS plugin layer)
+
+All remaining Python files, including the plugin entry point, QGIS algorithm wrappers (`mtf_estimator_algorithm_*.py`, `base_mtf_estimator_algorithm.py`), `mtf.py`, `raster_tools.py`, `result_dockwidget.py`, `dependency_checker.py`, and `scripts/mtf_computer.py`.
+
+---
+
+## 10. Roadmap
 
 The final version of the plugin will include:
 
