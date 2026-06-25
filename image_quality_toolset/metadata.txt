@@ -1,16 +1,40 @@
 [general]
 name=ImageQualityToolset
-description=Provides tools to check on image quality
-about=Provides tools to check on image quality
+description=Computes MTF and SNR image quality metrics from satellite imagery using Knife Edge, Bridge (Pulse), and Variogram methods.
+about=The Image Quality Toolset is a QGIS plugin developed in the context of the ESA AI4QC project. It targets remote sensing Calibration/Validation users as a supporting tool for Quality Control (QC) of satellite imagery.
+
+    It integrates into the QGIS Processing Toolbox and provides a command-line interface to perform image quality assessments from Regions of Interest (ROIs) defined on an input raster. ROIs are processed to derive Modulation Transfer Function (MTF) and Signal-to-Noise Ratio (SNR) image quality measures. Results are exported as diagnostic PNG figures and cumulative GeoPackage reports.
+
+    Three methods are available:
+    - MTF Knife Edge Method: estimates MTF from a sharp contrast transition between two uniform areas. Derived metrics include MTF@Nyquist, MTF30, MTF50, FWHM, RER, HEE, and R².
+    - MTF Bridge (Pulse) Method: estimates MTF from a narrow pulse target (bridge structure).
+    - SNR Variogram Method: computes SNR by combining a Histogram method and a Variogram method, with per-pixel local SNR estimation.
+
+    Each method requires an input raster and a polygon ROI (shapefile). Radiometric scale and offset parameters allow conversion from raw DN to radiance. Results are accumulated across runs in a GeoPackage report, one feature per analysis, with full metadata and geometry.
+
+    The plugin uses a dual-license model: the QGIS integration layer is released under GPL v3; the core signal-processing algorithms (MTF, SNR, ESF models, variogram) are released under Apache 2.0.
 version=1.0
 qgisMinimumVersion=3.0
 author=Telespazio TIM
 email=sen2like@telespazio.com
 category=Analysis
-tags=image quality,mtf,sharpness,analysis,raster
+tags=image quality,MTF,SNR,sharpness,satellite,remote sensing,calibration,validation,raster,knife edge,ESF,LSF
+icon=icons/mtf.png
 repository=https://github.com/telespazio-tim/qgis-image-quality-toolset
-homepage=
-tracker=
+homepage=https://github.com/telespazio-tim/qgis-image-quality-toolset
+tracker=https://github.com/telespazio-tim/qgis-image-quality-toolset/issues
 license=GPL-3
 license_file=LICENSE
 supportsQt6=True
+hasProcessingProvider=yes
+experimental=False
+deprecated=False
+plugin_dependencies=
+changelog=
+    ImageQualityToolset 1.0 - Initial release.
+        - MTF Knife Edge Method: computes MTF from a sharp-edge ROI with parametric (sigmoid, tanh, Fermi, erf, Gaussian-exponential) and non-parametric (Loess, polynomial) ESF models. Reports MTF@Nyquist, MTF30, MTF50, FWHM, RER, HEE, SNR, and R².
+        - MTF Bridge (Pulse) Method: computes MTF from a pulse/bridge target ROI.
+        - SNR Variogram Method: estimates SNR combining a Histogram method and a Variogram method with per-pixel local SNR values.
+        - Outputs: synthetic diagnostic PNG figure, detailed analysis PNG figure, and cumulative GeoPackage report (one polygon feature per run).
+        - QGIS Processing Toolbox integration and standalone command-line interface via INI configuration files.
+        - Dual-license model: GPL v3 for the QGIS plugin layer, Apache 2.0 for the core signal-processing algorithms.
