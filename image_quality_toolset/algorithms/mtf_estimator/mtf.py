@@ -16,7 +16,7 @@
 # -------------------------------------------------------------------------
 
 from pathlib import Path
-from matplotlib.pyplot import Figure
+from matplotlib.figure import Figure
 from qgis.core import QgsVectorLayer
 from qgis.core import QgsProcessingFeedback
 from .mtf_common import remove_nan_borders

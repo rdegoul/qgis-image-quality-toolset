@@ -443,7 +443,14 @@ def esf_gauss_exp_param(x, R, passpline):
 
 
 def esf_loess(x, R, degree=2, frac=0.01):
-    from loess.loess_1d import loess_1d
+    try:
+        from loess.loess_1d import loess_1d
+    except ImportError as e:
+        raise ImportError(
+            "The 'esf_loess' ESF model requires the 'loess' Python package, which could not be "
+            "installed automatically. Install it with QGIS's Python interpreter "
+            "('python3 -m pip install --no-deps loess'), or choose another ESF model."
+        ) from e
 
     xnew = np.arange(np.min(x), np.max(x)+1, 1)
     xout, y_smooth, wout = loess_1d(x, R, xnew=xnew, degree=degree, frac=frac)

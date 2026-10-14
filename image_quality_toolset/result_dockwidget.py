@@ -44,7 +44,8 @@ from .algorithms.mtf_estimator.mtf import Mtf
 
 
 class MTFEvent(QEvent):
-    EVENT_TYPE = QEvent.registerEventType()
+    # QEvent.Type, not int: PyQt6 rejects an int here and never matches it against event.type()
+    EVENT_TYPE = QEvent.Type(QEvent.registerEventType())
 
     def __init__(self, algorithmId : str, mtf: Mtf, parameters: dict):
         super().__init__(MTFEvent.EVENT_TYPE)
@@ -127,7 +128,7 @@ class PlotWindow(QgsDockWidget):
             "To view results, run the Image Quality Toolset processing algorithm\n"
             "from the Processing Toolbox (Menu > Processing > Toolbox)"
         )
-        self.placeholder_label.setAlignment(Qt.AlignCenter)
+        self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.placeholder_label.setWordWrap(True)
         self.content_layout.addWidget(self.placeholder_label)
 
@@ -162,7 +163,7 @@ class PlotWindow(QgsDockWidget):
         # Status label
         self.progress_label = QLabel("Checking dependencies...")
         self.progress_label.setStyleSheet("font-size: 10px; color: #666;")
-        self.progress_label.setAlignment(Qt.AlignCenter)
+        self.progress_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         progress_layout.addWidget(self.progress_label)
 
         # Error button (hidden by default)
@@ -172,14 +173,14 @@ class PlotWindow(QgsDockWidget):
         self.error_button.hide()
         self.error_button.setStyleSheet("font-size: 10px; color: #d32f2f;")
         progress_layout.addWidget(self.error_button)
-        progress_layout.setAlignment(self.error_button, Qt.AlignCenter)
+        progress_layout.setAlignment(self.error_button, Qt.AlignmentFlag.AlignCenter)
 
         self.content_layout.addWidget(self.progress_container)
         self.progress_container.hide()
 
         # Add the company attribution at the bottom
         company_label = QLabel("<i>by Telespazio France</i>")
-        company_label.setAlignment(Qt.AlignCenter)
+        company_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.content_layout.addWidget(company_label)
 
         placeholder_widget.setLayout(self.content_layout)

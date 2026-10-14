@@ -22,6 +22,7 @@ from qgis.PyQt.QtCore import QCoreApplication
 from image_quality_toolset.result_dockwidget import MTFEvent
 
 from .base_mtf_estimator_algorithm import BaseMTFEstimatorAlgorithm
+from ...compat import NUMBER_DOUBLE, NUMBER_INTEGER
 from .snr import SNR
 from ..tools.raster_tools import roi_extraction
 
@@ -52,7 +53,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.WINDOW_SIZE,
                 self.tr("Window size"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=NUMBER_INTEGER,
                 defaultValue=5
             )
         )
@@ -60,7 +61,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.SNR_PRECISION,
                 self.tr("SNR precision"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=1.0
             )
         )
@@ -68,7 +69,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.L_MIN,
                 self.tr("L min (radiance minimum)"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=0.0
             )
         )
@@ -76,7 +77,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.L_MAX,
                 self.tr("L max (radiance maximum)"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=1.0
             )
         )
@@ -84,7 +85,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.SCALE,
                 self.tr("Scale"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=1.0
             )
         )
@@ -92,7 +93,7 @@ class MTFEstimatorAlgorithmSNR(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.OFFSET,
                 self.tr("Offset"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=0.0
             )
         )

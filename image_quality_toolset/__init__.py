@@ -83,8 +83,15 @@ class ImageQualityToolSet:
             DependencyInfo(name="NumPy", import_name="numpy", min_version="1.20.0"),
             DependencyInfo(name="SciPy", import_name="scipy", min_version="1.7.0"),
             DependencyInfo(name="Matplotlib", import_name="matplotlib", min_version="3.4.0"),
-            DependencyInfo(name="loess", import_name="loess", min_version="2.1.2"),
-            DependencyInfo(name="scikit-image", import_name="skimage", package="scikit-image"),
+            # Only needed by the "esf_loess" ESF model. Its wheel requires numpy,
+            # matplotlib and plotbin, but loess_1d only uses numpy, which QGIS ships.
+            DependencyInfo(name="loess", import_name="loess", min_version="2.1.2", optional=True, no_deps=True),
+            # Only needed by the Bridge method (angle estimation). Installed without its
+            # requirements: they would bring a second numpy/scipy/pillow shadowing the QGIS ones.
+            # lazy_loader and packaging are the pure-Python ones QGIS may not ship.
+            DependencyInfo(name="lazy_loader", import_name="lazy_loader", package="lazy-loader", optional=True, no_deps=True),
+            DependencyInfo(name="packaging", import_name="packaging", optional=True, no_deps=True),
+            DependencyInfo(name="scikit-image", import_name="skimage", package="scikit-image", optional=True, no_deps=True),
         ]
 
         # Start background check

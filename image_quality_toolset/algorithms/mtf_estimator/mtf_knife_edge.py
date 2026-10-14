@@ -17,7 +17,8 @@
 import os
 import sys
 
-import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib.figure import Figure
 import numpy as np
 from scipy import stats
 from scipy.interpolate import CubicSpline
@@ -1222,8 +1223,6 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         self.HEE_lower = np.abs(HEE_lower)
         self.HEE_upper = np.abs(HEE_upper)
 
-        plt.close()
-
     def _extract_gsd(self):
         """Extract GSD (in CRS units) from the raster geotransform, or None if not georeferenced."""
         try:
@@ -1294,29 +1293,29 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         else:
             name = 'Across Track'
 
-        self._figure = plt.figure(figsize=(25, 15), dpi=100)
+        self._figure = fig = Figure(figsize=(25, 15), dpi=100)
 
-        plt.suptitle(
+        fig.suptitle(
             f"{name} MTF Results",
             fontsize=28,
             fontweight='bold'
         )
 
-        plt.subplot(2, 3, 1)
+        ax = fig.add_subplot(2, 3, 1)
         y_normalize = self.y_esf / np.max(self.y_esf)
         #            plot.plot(sc*(self.x - ox_esf) , self.nuage,'o')
-        plt.plot(sc * (self.x_esf - ox_esf),
+        ax.plot(sc * (self.x_esf - ox_esf),
                  y_normalize,
                  '+-', label="ESF")
-        plt.plot(sc * (self.x_esf[np.take(a3_b, 0)] - ox_esf),
+        ax.plot(sc * (self.x_esf[np.take(a3_b, 0)] - ox_esf),
                  self.y_esf[np.take(a3_b, 0)] / np.max(self.y_esf), '+', label="Inflexion nt")
-        plt.plot(sc * (self.x_lsf - ox_lsf), self.y_lsf / np.max(self.y_lsf), '-', label="LSF")
-        plt.plot(sc * (self.x_lsf - ox_esf), np.array(self.fwhm) / np.max(self.y_lsf), '-', label="FWHM")
+        ax.plot(sc * (self.x_lsf - ox_lsf), self.y_lsf / np.max(self.y_lsf), '-', label="LSF")
+        ax.plot(sc * (self.x_lsf - ox_esf), np.array(self.fwhm) / np.max(self.y_lsf), '-', label="FWHM")
         #plt.plot(sc * (self.x_esf - ox_esf), u[:, 0], '-', label="Heaviside")
-        plt.plot(sc * (self.x_esf - ox_esf), u, '-', label="Heaviside")
+        ax.plot(sc * (self.x_esf - ox_esf), u, '-', label="Heaviside")
 
-        plt.rcParams['axes.labelsize'] = 12
-        plt.rcParams['axes.labelweight'] = 'bold'
+        matplotlib.rcParams['axes.labelsize'] = 12
+        matplotlib.rcParams['axes.labelweight'] = 'bold'
 
         if self.RER > 0:
             loc_word = 'northwest'
@@ -1325,15 +1324,15 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         #           legend(' ESF ', ' Inflexion nt', 'LSF','FWHM','Heaviside','location',loc_word)
 
-        plt.title(' ESF / LSF / MTF ',
+        ax.set_title(' ESF / LSF / MTF ',
                   fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.xlabel(' Pixels ')
-        plt.ylabel(' Intensity (minus bkg)')
-        plt.legend()
-        plt.grid()
+        ax.set_xlabel(' Pixels ')
+        ax.set_ylabel(' Intensity (minus bkg)')
+        ax.legend()
+        ax.grid()
 
         # Data
-        ax_text = plt.subplot(2, 3, 2)
+        ax_text = fig.add_subplot(2, 3, 2)
         ax_text.axis('off')
 
         # on the left and smaller
@@ -1392,74 +1391,74 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         )
 
         # MTF
-        plt.subplot(2, 3, 3)
+        ax = fig.add_subplot(2, 3, 3)
 
         #plt.plot(self.f, self.mtf, color="k", marker='o')
 
-        plt.plot(self.f, self.mtf, color="k", ls='-')
+        ax.plot(self.f, self.mtf, color="k", ls='-')
 
-        plt.axhline(0.3, color="b", ls=':', linewidth=2, label="MTF30 = {:.2f}".format(self.MTF30))
-        plt.axvline(self.MTF30, color="b", ls=':', linewidth=2)
+        ax.axhline(0.3, color="b", ls=':', linewidth=2, label="MTF30 = {:.2f}".format(self.MTF30))
+        ax.axvline(self.MTF30, color="b", ls=':', linewidth=2)
 
-        plt.axhline(y=0.5, color="g", ls=':', linewidth=2, label="MTF50 = {:.2f}".format(self.MTF50))
-        plt.axvline(self.MTF50, color="g", ls=':', linewidth=2)
+        ax.axhline(y=0.5, color="g", ls=':', linewidth=2, label="MTF50 = {:.2f}".format(self.MTF50))
+        ax.axvline(self.MTF50, color="g", ls=':', linewidth=2)
 
-        plt.axhline(self.MTF_NYQ, color="red", ls='--', linewidth=2.5, label="MTF at Nyquist")
-        plt.axvline(x=0.5, color="red", ls='--', linewidth=2.5)
+        ax.axhline(self.MTF_NYQ, color="red", ls='--', linewidth=2.5, label="MTF at Nyquist")
+        ax.axvline(x=0.5, color="red", ls='--', linewidth=2.5)
 
-        plt.grid(linewidth=0.5)
+        ax.grid(linewidth=0.5)
         self.direction_code = 'XXXX'
-        plt.title(' MTF ', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.xlabel(' Freq ', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.ylabel(' Normalized Module ', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_title(' MTF ', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_xlabel(' Freq ', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_ylabel(' Normalized Module ', fontname="Times New Roman", fontweight="bold", fontsize=20)
 
 
-        plt.legend(fontsize=10)
+        ax.legend(fontsize=10)
 
 
         # FIT ESF
-        plt.subplot(2, 3, 4)
-        plt.plot(sc * (self.x - ox_esf), self.nuage, 'o', label="orginal esf")
-        plt.plot(sc * (self.x_esf0 - ox_esf), self.y_esf0, '+', label="interpolated esf")
+        ax = fig.add_subplot(2, 3, 4)
+        ax.plot(sc * (self.x - ox_esf), self.nuage, 'o', label="orginal esf")
+        ax.plot(sc * (self.x_esf0 - ox_esf), self.y_esf0, '+', label="interpolated esf")
 
         #            title(['esf, 2nd order poly interpolation, win size , 2 ou 1 - '  self.direction ' direction (' self.direction_code ' )'])
-        plt.title(' ESF ', fontname="Times New Roman",
+        ax.set_title(' ESF ', fontname="Times New Roman",
                   fontweight="bold", fontsize=20)
         #            legend('orginal esf', '2nd order esf','location','east')
 
-        plt.xlabel(' Pixels ')
-        plt.legend()
-        plt.grid()
+        ax.set_xlabel(' Pixels ')
+        ax.legend()
+        ax.grid()
 
         # HEE ESF
-        plt.subplot(2, 3, 5)
-        plt.plot(sc * (self.x_esf - a3),
+        ax = fig.add_subplot(2, 3, 5)
+        ax.plot(sc * (self.x_esf - a3),
                  self.yo_n, label='Normalized ESF')
-        plt.axvline(self.x05, color="b", ls='--', label="5%")
-        plt.axvline(self.x50, color="r", ls='--', linewidth=2, label="50%")
-        plt.axvline(self.x95, color="y", ls='--', label="95%")
-        plt.axvspan(self.x05, self.x50, alpha=0.2, color='blue')
-        plt.axvspan(self.x50, self.x95, alpha=0.2, color='yellow')
-        plt.scatter(x_plot, y_plot, zorder=5, label='RER points')
-        plt.xlabel(' Pixel ')
-        plt.ylabel(' Normalized Edge values ')
-        plt.legend(loc='center left', bbox_to_anchor=(0.7, 0.5))
-        plt.grid()
-        plt.title(f'Half Edge Extent values\nHEE lower = {self.HEE_lower:.2f} subpx | HEE upper = {self.HEE_upper:.2f} subpx',
+        ax.axvline(self.x05, color="b", ls='--', label="5%")
+        ax.axvline(self.x50, color="r", ls='--', linewidth=2, label="50%")
+        ax.axvline(self.x95, color="y", ls='--', label="95%")
+        ax.axvspan(self.x05, self.x50, alpha=0.2, color='blue')
+        ax.axvspan(self.x50, self.x95, alpha=0.2, color='yellow')
+        ax.scatter(x_plot, y_plot, zorder=5, label='RER points')
+        ax.set_xlabel(' Pixel ')
+        ax.set_ylabel(' Normalized Edge values ')
+        ax.legend(loc='center left', bbox_to_anchor=(0.7, 0.5))
+        ax.grid()
+        ax.set_title(f'Half Edge Extent values\nHEE lower = {self.HEE_lower:.2f} subpx | HEE upper = {self.HEE_upper:.2f} subpx',
                   fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
+        fig.tight_layout(rect=[0, 0, 1, 0.95])
 
         # LSF
-        plt.subplot(2, 3, 6)
+        ax = fig.add_subplot(2, 3, 6)
         # imagesc(self.target)
         #m = self.x_lsf[int(np.floor(self.x_lsf.shape[0] / 2)) - i]
-        plt.plot(sc * (self.x_lsf - ox_lsf), self.y_lsf / np.max(self.y_lsf), '--', label="lsf")
-        plt.plot(sc * (self.x_lsf - ox_lsf), self.y_lsf / np.max(self.y_lsf), 'o')
+        ax.plot(sc * (self.x_lsf - ox_lsf), self.y_lsf / np.max(self.y_lsf), '--', label="lsf")
+        ax.plot(sc * (self.x_lsf - ox_lsf), self.y_lsf / np.max(self.y_lsf), 'o')
 
-        plt.title(' LSF ',
+        ax.set_title(' LSF ',
                   fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.xlabel(' Pixels ')
-        plt.grid()
+        ax.set_xlabel(' Pixels ')
+        ax.grid()
         return [self._figure, self.panel2()]
 
     def panel2(self):
@@ -1487,16 +1486,16 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         a3_b = np.where(self.x_esf == self.a3)
         ox_esf = self.x_esf[np.take(a3_b, 0)]
 
-        self._figure2 = plt.figure(figsize=(25, 15), dpi=100)
+        self._figure2 = fig = Figure(figsize=(25, 15), dpi=100)
 
-        plt.subplots_adjust(hspace=0.5)
+        fig.subplots_adjust(hspace=0.5)
 
         if self.MTF_direction == 'AL':
             name = 'Along Track'
         else:
             name = 'Across Track'
 
-        plt.suptitle(
+        fig.suptitle(
             f"{name} MTF Results 2",
             fontsize=28,
             fontweight='bold'
@@ -1504,21 +1503,21 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
 
         # VIEW OF THE TARGET
 
-        plt.subplot(2, 3, 1)
-        plt.imshow(self.im_array, cmap='gray', aspect='auto')
+        ax = fig.add_subplot(2, 3, 1)
+        ax.imshow(self.im_array, cmap='gray', aspect='auto')
         if self.edge_direction == 'AL':
-            plt.plot(y, x, 'r+', label='edge subpixel location')  # X-1 to be in image coordinate
+            ax.plot(y, x, 'r+', label='edge subpixel location')  # X-1 to be in image coordinate
         if self.edge_direction == 'CT':
-            plt.plot(x, y, 'r+', label='edge subpixel location')  # X-1 to be in image coordinate
+            ax.plot(x, y, 'r+', label='edge subpixel location')  # X-1 to be in image coordinate
 
-        plt.title('Inflexion point location')
-        plt.xlabel('Records')
+        ax.set_title('Inflexion point location')
+        ax.set_xlabel('Records')
         ch = 'linear interpolation,angle : {:.2f} °'.format(self.estimated_angle)
-        plt.legend()
+        ax.legend()
 
         # VIEW OF THE NUAGE
 
-        plt.subplot(2, 3, 2)
+        ax = fig.add_subplot(2, 3, 2)
         if self.MTF_direction == 'CT':
             img = self.AL_EDGE
             print(' Show AL Edge')
@@ -1526,7 +1525,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             img = self.CT_EDGE
             print(' Show CT Edge')
 
-        plt.imshow(img, cmap='gray', aspect='auto')
+        ax.imshow(img, cmap='gray', aspect='auto')
 
         h, w = img.shape
 
@@ -1535,32 +1534,32 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         cx = w // 2
         cy = h // 2
 
-        plt.xlim(cx - zoom, cx + zoom)
-        plt.ylim(cy + zoom, cy - zoom)
+        ax.set_xlim(cx - zoom, cx + zoom)
+        ax.set_ylim(cy + zoom, cy - zoom)
 
-        plt.title(' Over Sample / Projected Edge Target, sampling : {} '.format(self.sampling))
-        plt.colorbar()
+        ax.set_title(' Over Sample / Projected Edge Target, sampling : {} '.format(self.sampling))
+        fig.colorbar(ax.images[-1], ax=ax)
 
         # REFINE EDGE
 
-        plt.subplot(2, 3, 3)
+        ax = fig.add_subplot(2, 3, 3)
 
         # Refine edge graph
 
-        plt.plot(x, y, '+', label='inflexion point location')
-        plt.plot(x, x * lr.slope + lr.intercept, '-', label='Interpolation')
-        plt.title(' Orientation angle estimate / input : {:.2f} / {:.2f}  degrees \n Uncertainty : {:.2f} degrees'
+        ax.plot(x, y, '+', label='inflexion point location')
+        ax.plot(x, x * lr.slope + lr.intercept, '-', label='Interpolation')
+        ax.set_title(' Orientation angle estimate / input : {:.2f} / {:.2f}  degrees \n Uncertainty : {:.2f} degrees'
                   .format(self.estimated_angle, self.estimated_angle_refined, angle_err))
-        plt.xlabel(g_xlabel)
-        plt.ylabel(g_ylabel)
-        plt.legend()
-        plt.grid()
+        ax.set_xlabel(g_xlabel)
+        ax.set_ylabel(g_ylabel)
+        ax.legend()
+        ax.grid()
 
         # STATISTICS
 
-        plt.subplot(2, 3, 4)
+        ax = fig.add_subplot(2, 3, 4)
 
-        ax1 = plt.gca()
+        ax1 = ax
 
         bin_edges = self.x
         bin_means = self.nuage
@@ -1602,9 +1601,9 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=9)
 
-        plt.grid(True, alpha=0.15, axis='both')
+        ax2.grid(True, alpha=0.15, axis='both')
 
-        plt.title('Input ESF')
+        ax2.set_title('Input ESF')
 
         # ESF CLEAN
 
@@ -1613,7 +1612,7 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
         nuage_max = np.max(self.nuage)
         nuage_norm = (self.nuage - nuage_min) / (nuage_max - nuage_min)
 
-        plt.subplot(2, 3, 5)
+        ax = fig.add_subplot(2, 3, 5)
 
         # Detect transition direction (based on extremities)
         if nuage_norm[0] > nuage_norm[-1]:
@@ -1639,25 +1638,25 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             # Falling: high → low
             u5 = np.where(self.x >= ox5_esf, low_level, high_level)
 
-        plt.scatter( (self.x - ox_esf) , nuage_norm, c='green', s=10, alpha=0.7, label='Cleaned ESF points')
-        plt.plot((self.x - ox_esf) , u5, color='orange', label="Heaviside")
+        ax.scatter( (self.x - ox_esf) , nuage_norm, c='green', s=10, alpha=0.7, label='Cleaned ESF points')
+        ax.plot((self.x - ox_esf) , u5, color='orange', label="Heaviside")
         #plt.errorbar(self.x, self.nuage, yerr=self.nuage_std, fmt='none', alpha=0.3, color='green')
-        plt.xlabel('Position (bins)')
-        plt.ylabel('Mean Radiance')
-        plt.title(f'Normalized Input ESF ( Cleaned Non-Eq Space ESF )\n{len(self.x)} bins (threshold N>{self.th})')
-        plt.legend()
-        plt.annotate(
+        ax.set_xlabel('Position (bins)')
+        ax.set_ylabel('Mean Radiance')
+        ax.set_title(f'Normalized Input ESF ( Cleaned Non-Eq Space ESF )\n{len(self.x)} bins (threshold N>{self.th})')
+        ax.legend()
+        ax.annotate(
             f'Total possible bins: {self.tot_bin}\n'
             f'Processed / kept bins: {len(self.x)}',
             xy=(0.98, 0.5), xycoords='axes fraction',
             ha='right', va='center', fontsize=9,
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none')
         )
-        plt.grid(True, alpha=0.3)
+        ax.grid(True, alpha=0.3)
 
         # ESF INTERPOLATED
 
-        plt.subplot(2, 3, 6)
+        ax = fig.add_subplot(2, 3, 6)
 
         y6 = self.y_esf
 
@@ -1688,13 +1687,13 @@ class MtfKnifeEdge(Mtf):  # M Sample origin for statistics
             u6 = np.where(np.arange(len(y6_norm)) >= idx_trans6, low_level, high_level)
 
         # Display
-        plt.scatter((self.x_esf - self.a3), y6_norm, c='red', s=10, alpha=0.7,
+        ax.scatter((self.x_esf - self.a3), y6_norm, c='red', s=10, alpha=0.7,
                     label='Normalized Interpolated ESF points')
-        plt.plot((self.x_esf - ox_esf), u6, color='orange', label="Heaviside")
-        plt.xlabel('Position (bins)')
-        plt.ylabel('Mean Radiance')
-        plt.title(f'Normalized Interpolated ESF ( Cut )')
-        plt.legend()
-        plt.grid(True, alpha=0.3)
+        ax.plot((self.x_esf - ox_esf), u6, color='orange', label="Heaviside")
+        ax.set_xlabel('Position (bins)')
+        ax.set_ylabel('Mean Radiance')
+        ax.set_title(f'Normalized Interpolated ESF ( Cut )')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
 
         return self._figure2

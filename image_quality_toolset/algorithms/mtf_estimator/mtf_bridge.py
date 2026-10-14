@@ -17,7 +17,8 @@
 import os
 from typing import Optional
 
-import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib.figure import Figure
 import numpy as np
 from scipy import stats
 from scipy.stats import linregress
@@ -105,7 +106,8 @@ def estimate_angle_from_bridge(
     if expert_mode and debug_dir:
         os.makedirs(debug_dir, exist_ok=True)
 
-        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        fig = Figure(figsize=(20, 5))
+        axes = fig.subplots(1, 4)
         fig.suptitle(f"estimate_angle_from_bridge — estimated angle: {angle:.2f}°")
 
         axes[0].imshow(img_norm, cmap="gray")
@@ -130,9 +132,8 @@ def estimate_angle_from_bridge(
         axes[3].legend(fontsize=8)
         axes[3].axis("off")
 
-        plt.tight_layout()
+        fig.tight_layout()
         fig.savefig(os.path.join(debug_dir, "angle_estimation_steps.png"), dpi=150, bbox_inches="tight")
-        plt.close(fig)
 
     return float(angle)
 
@@ -709,24 +710,24 @@ class MtfBridge(Mtf):
         else:
             name = 'Across Track'
 
-        self._figure = plt.figure(figsize=(25, 15), dpi=100)
-        plt.suptitle(f"{name} MTF Results (Bridge Method)", fontsize=28, fontweight='bold')
+        self._figure = fig = Figure(figsize=(25, 15), dpi=100)
+        fig.suptitle(f"{name} MTF Results (Bridge Method)", fontsize=28, fontweight='bold')
 
         # --- Subplot 1: Measured vs ideal rect input ---
-        plt.subplot(2, 3, 1)
+        ax = fig.add_subplot(2, 3, 1)
         x_centered = sc * (self.x_lsf - ox_lsf)
         y_norm = self.y_lsf / np.max(self.y_lsf) if np.max(self.y_lsf) != 0 else self.y_lsf
-        plt.plot(x_centered, y_norm, '+-', label='Measured (output)')
-        plt.plot(sc * (self.xo_input - ox_lsf), self.yo_input, '--',
+        ax.plot(x_centered, y_norm, '+-', label='Measured (output)')
+        ax.plot(sc * (self.xo_input - ox_lsf), self.yo_input, '--',
                  label=f'Ideal rect (LT_w={self.bridge_width} px)')
-        plt.title('Measured vs Ideal Input', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.xlabel('Pixels')
-        plt.ylabel('Normalized intensity')
-        plt.legend()
-        plt.grid()
+        ax.set_title('Measured vs Ideal Input', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_xlabel('Pixels')
+        ax.set_ylabel('Normalized intensity')
+        ax.legend()
+        ax.grid()
 
         # --- Subplot 2: Results text ---
-        ax_text = plt.subplot(2, 3, 2)
+        ax_text = fig.add_subplot(2, 3, 2)
         ax_text.axis('off')
 
         if gsd is not None:
@@ -771,44 +772,44 @@ class MtfBridge(Mtf):
         )
 
         # --- Subplot 3: MTF curve (up to Nyquist) ---
-        plt.subplot(2, 3, 3)
+        ax = fig.add_subplot(2, 3, 3)
         mask_nyq = self.f <= 1
         #plt.plot(self.f[mask_nyq], self.mtf, color='k', ls='-')
-        plt.plot(self.display_frequencies, self.R2_smoothed, color='k', ls='-')
-        plt.axhline(0.3, color="b", ls=':', linewidth=2, label=f"MTF30 = {self.MTF30:.2f}")
-        plt.axvline(self.MTF30, color="b", ls=':', linewidth=2)
-        plt.axhline(0.5, color="g", ls=':', linewidth=2, label=f"MTF50 = {self.MTF50:.2f}")
-        plt.axvline(self.MTF50, color="g", ls=':', linewidth=2)
-        plt.axhline(self.MTF_NYQ, color="red", ls='--', linewidth=2.5, label="MTF at Nyquist")
-        plt.axvline(0.5, color="red", ls='--', linewidth=2.5)
-        plt.grid(linewidth=0.5)
-        plt.title('MTF (Bridge FFT ratio)', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.xlabel('Freq (cycles/pixel)', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.ylabel('Normalized Module', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.legend(fontsize=10)
+        ax.plot(self.display_frequencies, self.R2_smoothed, color='k', ls='-')
+        ax.axhline(0.3, color="b", ls=':', linewidth=2, label=f"MTF30 = {self.MTF30:.2f}")
+        ax.axvline(self.MTF30, color="b", ls=':', linewidth=2)
+        ax.axhline(0.5, color="g", ls=':', linewidth=2, label=f"MTF50 = {self.MTF50:.2f}")
+        ax.axvline(self.MTF50, color="g", ls=':', linewidth=2)
+        ax.axhline(self.MTF_NYQ, color="red", ls='--', linewidth=2.5, label="MTF at Nyquist")
+        ax.axvline(0.5, color="red", ls='--', linewidth=2.5)
+        ax.grid(linewidth=0.5)
+        ax.set_title('MTF (Bridge FFT ratio)', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_xlabel('Freq (cycles/pixel)', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_ylabel('Normalized Module', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.legend(fontsize=10)
 
         # --- Subplot 4: LSF reconstruct ---
-        plt.subplot(2, 3, 4)
-        plt.plot(self.x_lsf[1:], np.abs(self._lsf)[1:], '+', label='LSF')
-        plt.plot(self.x_lsf[1:], np.abs(self._lsf_reconstructed)[1:], label='Reconstructed LSF')
-        plt.title('LSF', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.xlabel('Pixels')
-        plt.legend()
-        plt.grid()
+        ax = fig.add_subplot(2, 3, 4)
+        ax.plot(self.x_lsf[1:], np.abs(self._lsf)[1:], '+', label='LSF')
+        ax.plot(self.x_lsf[1:], np.abs(self._lsf_reconstructed)[1:], label='Reconstructed LSF')
+        ax.set_title('LSF', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_xlabel('Pixels')
+        ax.legend()
+        ax.grid()
 
         # --- Subplot 5: FFT of input vs output ---
-        plt.subplot(2, 3, 5)
+        ax = fig.add_subplot(2, 3, 5)
         mask_nyq = self.f <= 1
-        plt.plot(self.f[mask_nyq], self.fft_input_masked[mask_nyq], '+', label='FFT input (ideal rect)')
-        plt.plot(self.f[mask_nyq], self.fft_output_masked[mask_nyq], 'o', label='FFT output (measured LSF)')
-        plt.axvline(0.5, color="red", ls='--', linewidth=1.5, label='Nyquist')
-        plt.title('FFT Input vs Output', fontname="Times New Roman", fontweight="bold", fontsize=20)
-        plt.xlabel('Freq (cycles/pixel)')
-        plt.ylabel('Normalized amplitude')
-        plt.legend()
-        plt.grid()
+        ax.plot(self.f[mask_nyq], self.fft_input_masked[mask_nyq], '+', label='FFT input (ideal rect)')
+        ax.plot(self.f[mask_nyq], self.fft_output_masked[mask_nyq], 'o', label='FFT output (measured LSF)')
+        ax.axvline(0.5, color="red", ls='--', linewidth=1.5, label='Nyquist')
+        ax.set_title('FFT Input vs Output', fontname="Times New Roman", fontweight="bold", fontsize=20)
+        ax.set_xlabel('Freq (cycles/pixel)')
+        ax.set_ylabel('Normalized amplitude')
+        ax.legend()
+        ax.grid()
 
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
+        fig.tight_layout(rect=[0, 0, 1, 0.95])
         return [self._figure, self.panel2()]
 
     def panel2(self):
@@ -830,54 +831,54 @@ class MtfBridge(Mtf):
         a3_b = np.where(self.x_esf == self.a3)
         ox_esf = self.x_esf[np.take(a3_b, 0)]
 
-        self._figure2 = plt.figure(figsize=(25, 15), dpi=100)
-        plt.subplots_adjust(hspace=0.5)
+        self._figure2 = fig = Figure(figsize=(25, 15), dpi=100)
+        fig.subplots_adjust(hspace=0.5)
 
         if self.MTF_direction == 'AL':
             name = 'Along Track'
         else:
             name = 'Across Track'
 
-        plt.suptitle(f"{name} MTF Results 2", fontsize=28, fontweight='bold')
+        fig.suptitle(f"{name} MTF Results 2", fontsize=28, fontweight='bold')
 
-        plt.subplot(2, 3, 1)
-        plt.imshow(self.im_array, cmap='gray', aspect='auto')
+        ax = fig.add_subplot(2, 3, 1)
+        ax.imshow(self.im_array, cmap='gray', aspect='auto')
         if self.edge_direction == 'AL':
-            plt.plot(y, x, 'r+', label='edge subpixel location')
+            ax.plot(y, x, 'r+', label='edge subpixel location')
         if self.edge_direction == 'CT':
-            plt.plot(x, y, 'r+', label='edge subpixel location')
-        plt.title('Inflexion point location')
-        plt.xlabel('Records')
-        plt.legend()
+            ax.plot(x, y, 'r+', label='edge subpixel location')
+        ax.set_title('Inflexion point location')
+        ax.set_xlabel('Records')
+        ax.legend()
 
-        plt.subplot(2, 3, 2)
+        ax = fig.add_subplot(2, 3, 2)
         if self.MTF_direction == 'CT':
             img = self.AL_EDGE
         else:
             img = self.CT_EDGE
-        plt.imshow(img, cmap='gray', aspect='auto')
+        ax.imshow(img, cmap='gray', aspect='auto')
         h, w = img.shape
         zoom = 80
         cx = w // 2
         cy = h // 2
-        plt.xlim(cx - zoom, cx + zoom)
-        plt.ylim(cy + zoom, cy - zoom)
-        plt.title(' Over Sample / Projected Edge Target, sampling : {} '.format(self.sampling))
-        plt.colorbar()
+        ax.set_xlim(cx - zoom, cx + zoom)
+        ax.set_ylim(cy + zoom, cy - zoom)
+        ax.set_title(' Over Sample / Projected Edge Target, sampling : {} '.format(self.sampling))
+        fig.colorbar(ax.images[-1], ax=ax)
 
-        plt.subplot(2, 3, 3)
-        plt.plot(x, y, '+', label='inflexion point location')
-        plt.plot(x, x * lr.slope + lr.intercept, '-', label='Interpolation')
-        plt.title(
+        ax = fig.add_subplot(2, 3, 3)
+        ax.plot(x, y, '+', label='inflexion point location')
+        ax.plot(x, x * lr.slope + lr.intercept, '-', label='Interpolation')
+        ax.set_title(
             'Angle : {:.2f}'.format(self.angle)
         )
-        plt.xlabel(g_xlabel)
-        plt.ylabel(g_ylabel)
-        plt.legend()
-        plt.grid()
+        ax.set_xlabel(g_xlabel)
+        ax.set_ylabel(g_ylabel)
+        ax.legend()
+        ax.grid()
 
-        plt.subplot(2, 3, 4)
-        ax1 = plt.gca()
+        ax = fig.add_subplot(2, 3, 4)
+        ax1 = ax
         bin_edges = self.x
         bin_means = self.nuage
         bin_count = self.N
@@ -897,8 +898,8 @@ class MtfBridge(Mtf):
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right', fontsize=9)
-        plt.grid(True, alpha=0.15, axis='both')
-        plt.title('Input signal')
+        ax2.grid(True, alpha=0.15, axis='both')
+        ax2.set_title('Input signal')
 
         nuage_min = np.min(self.nuage)
         nuage_max = np.max(self.nuage)
@@ -1008,8 +1009,6 @@ class MtfBridge(Mtf):
         self.HEE = np.abs(0.5 * (HEE_lower + HEE_upper))
         self.HEE_lower = np.abs(HEE_lower)
         self.HEE_upper = np.abs(HEE_upper)
-
-        plt.close()
 
     def _extract_gsd(self):
         try:

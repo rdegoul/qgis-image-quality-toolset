@@ -17,6 +17,7 @@
 
 from qgis.core import QgsProcessingParameterNumber, QgsProcessingParameterEnum
 from .base_mtf_estimator_algorithm import BaseMTFEstimatorAlgorithm
+from ...compat import NUMBER_DOUBLE, NUMBER_INTEGER
 from .mtf_bridge import MtfBridge
 from ..tools.raster_tools import roi_extraction
 
@@ -61,7 +62,7 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.SCALE,
                 self.tr("Scale"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=1.00
             )
         )
@@ -69,7 +70,7 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.OFFSET,
                 self.tr("Offset"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=0.0
             )
         )
@@ -77,7 +78,7 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.PX_MARGIN,
                 self.tr("Pixel margin"),
-                type=QgsProcessingParameterNumber.Integer,
+                type=NUMBER_INTEGER,
                 defaultValue=0
             )
         )
@@ -85,7 +86,7 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.BRIDGE_WIDTH,
                 self.tr("Bridge width (pixels)"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=6.0
             )
         )
@@ -101,7 +102,7 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
             QgsProcessingParameterNumber(
                 self.SAMPLING,
                 self.tr("Sampling (oversampling factor)"),
-                type=QgsProcessingParameterNumber.Double,
+                type=NUMBER_DOUBLE,
                 defaultValue=0.1,
                 minValue=0.0,
                 maxValue=1.0
@@ -110,7 +111,7 @@ class MTFEstimatorAlgorithmBridge(BaseMTFEstimatorAlgorithm):
         input_rotation_param = QgsProcessingParameterNumber(
             self.INPUT_ROTATION,
             self.tr("Input rotation angle (degrees)"),
-            type=QgsProcessingParameterNumber.Double,
+            type=NUMBER_DOUBLE,
             optional=True
         )
         input_rotation_param.setHelp(self.tr("If left empty, the rotation angle is automatically estimated from the edge."))

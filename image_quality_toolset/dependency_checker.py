@@ -48,6 +48,7 @@ class DependencyInfo:
         package: Optional[str] = None,
         min_version: Optional[str] = None,
         optional: bool = False,
+        no_deps: bool = False,
     ):
         """
         Initialize dependency info.
@@ -56,13 +57,19 @@ class DependencyInfo:
         :param import_name: Python import name (e.g., "cv2")
         :param package: Pip package name (defaults to import_name)
         :param min_version: Minimum version string (e.g., "4.0.0")
-        :param optional: Whether the dependency is optional
+        :param optional: Whether the dependency is optional (installation is
+            attempted, but a failure does not block the plugin)
+        :param no_deps: Install with pip --no-deps. Use it for packages whose
+            declared requirements are already provided by QGIS: with --target,
+            pip would otherwise install a second copy of them (numpy, matplotlib...)
+            that shadows the QGIS ones and can crash QGIS on import.
         """
         self.name = name
         self.import_name = import_name
         self.package = package or import_name
         self.min_version = min_version
         self.optional = optional
+        self.no_deps = no_deps
 
 
 class DependencyStatus:
@@ -110,19 +117,42 @@ class DependencyChecker:
         self.dependencies = dependencies
         self.results: Dict[str, DependencyStatus] = {}
 
+    def _get_python_executable(self) -> str:
+        """
+        Find the Python interpreter embedded in QGIS.
+
+        Inside QGIS, sys.executable is often the QGIS binary itself
+        (qgis-bin.exe on Windows, Contents/MacOS/QGIS on macOS): running
+        "<it> -m pip" would start a new QGIS instead of pip.
+        """
+        executable = sys.executable
+        if os.path.basename(executable).lower().startswith("python"):
+            return executable
+
+        exe_dir = os.path.dirname(executable)
+        version = f"{sys.version_info.major}.{sys.version_info.minor}"
+        candidates = [
+            # Windows (OSGeo4W / standalone installer)
+            os.path.join(exe_dir, "python.exe"),
+            os.path.join(exe_dir, "pythonw.exe"),
+            os.path.join(sys.exec_prefix, "python.exe"),
+            # macOS app bundle: Contents/MacOS/bin/python3
+            os.path.join(exe_dir, "bin", f"python{version}"),
+            os.path.join(exe_dir, "bin", "python3"),
+            # Generic prefix layout (Linux, conda, macOS frameworks)
+            os.path.join(sys.exec_prefix, "bin", f"python{version}"),
+            os.path.join(sys.exec_prefix, "bin", "python3"),
+        ]
+        for candidate in candidates:
+            if os.path.isfile(candidate):
+                return candidate
+
+        logger.warning(f"No Python interpreter found next to {executable}, using it for pip")
+        return executable
+
     def _get_pip_command(self) -> List[str]:
         """Get the appropriate pip command for the current platform."""
-        python_executable = sys.executable
-        # Handle QGIS on Windows where sys.executable might be qgis-bin.exe
-        if os.path.basename(python_executable).lower().endswith(".exe"):
-            python_w = os.path.join(os.path.dirname(python_executable), "pythonw.exe")
-            python_exe = os.path.join(os.path.dirname(python_executable), "python.exe")
-            if os.path.exists(python_exe):
-                python_executable = python_exe
-            elif os.path.exists(python_w):
-                python_executable = python_w
-
-        return [python_executable, "-m", "pip"]
+        return [self._get_python_executable(), "-m", "pip"]
 
     def _parse_version(self, version_str: str) -> Tuple[int, ...]:
         """Parse version string to comparable tuple."""
@@ -230,14 +260,15 @@ class DependencyChecker:
             for s in self.results.values()
         )
 
-    def get_missing(self) -> List[DependencyStatus]:
-        """Get list of missing or invalid non-optional dependencies."""
+    def get_missing(self, include_optional: bool = False) -> List[DependencyStatus]:
+        """Get list of missing or invalid dependencies (non-optional ones only by default)."""
         if not self.results:
             self.check_all()
         return [
             s
             for s in self.results.values()
-            if (not s.installed or not s.version_ok) and not s.info.optional
+            if (not s.installed or not s.version_ok)
+            and (include_optional or not s.info.optional)
         ]
 
     def install_missing(
@@ -246,7 +277,7 @@ class DependencyChecker:
         progress_callback: Optional[Callable[[str], None]] = None,
     ) -> Dict[str, Tuple[bool, str]]:
         """
-        Install all missing non-optional dependencies.
+        Install all missing dependencies, optional ones included.
 
         :param target_dir: Directory to install packages (isolated)
         :param progress_callback: Optional callback for progress messages
@@ -256,7 +287,7 @@ class DependencyChecker:
             self.check_all()
 
         results = {}
-        missing = self.get_missing()
+        missing = self.get_missing(include_optional=True)
 
         for status in missing:
             success, msg = self._install_single(
@@ -284,6 +315,9 @@ class DependencyChecker:
             package_spec = f"{info.package}>={info.min_version}"
 
         cmd = pip_cmd + ["install", package_spec]
+
+        if info.no_deps:
+            cmd.append("--no-deps")
 
         if target_dir:
             cmd += ["--target", target_dir, "--upgrade", "--no-cache-dir"]
@@ -570,7 +604,7 @@ def check_and_install_dependencies(
     checker = DependencyChecker(dependencies)
     checker.check_all()
 
-    missing = checker.get_missing()
+    missing = checker.get_missing(include_optional=True)
     if not missing:
         logger.info("All dependencies satisfied")
         return True
@@ -584,6 +618,9 @@ def check_and_install_dependencies(
 
     # Final re-check
     checker.check_all()
+    for s in checker.get_missing(include_optional=True):
+        if s.info.optional:
+            logger.warning(f"Optional dependency unavailable: {s.info.name}")
     if checker.has_missing():
         remaining = checker.get_missing()
         for s in remaining:
